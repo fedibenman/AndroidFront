@@ -221,25 +221,25 @@ fun NewPasswordScreen(
         )
         Spacer(modifier = Modifier.height(12.dp))
 
-        OutlinedTextField(
+        PasswordTextField(
             value = viewModel.newPassword,
             onValueChange = {
                 viewModel.newPassword = it
                 viewModel.clearError()
             },
-            label = { Text("New password") },
+            label = "New password",
             modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        OutlinedTextField(
+        PasswordTextField(
             value = confirmPassword,
             onValueChange = {
                 confirmPassword = it
                 viewModel.clearError()
             },
-            label = { Text("Confirm new password") },
+            label = "Confirm new password",
             modifier = Modifier.fillMaxWidth()
         )
 

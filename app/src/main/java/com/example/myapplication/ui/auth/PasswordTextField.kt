@@ -15,6 +15,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.myapplication.ui.theme.MyApplicationTheme
 
 
 /**
@@ -49,3 +51,17 @@ fun PasswordTextField(
 }
 
 
+
+
+@Preview(showBackground = true)
+@Composable
+fun PasswordTextFieldPreview() {
+    MyApplicationTheme {
+    PasswordTextField(
+        value = "Password",
+        onValueChange = {},
+        label = "Password",
+
+    )
+    }
+}

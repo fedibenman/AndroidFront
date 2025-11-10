@@ -20,12 +20,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.ui.theme.MyApplicationTheme
 
-/**
- * Login screen composable.
- * - viewModel provides state and actions
- * - onSignupRequested navigates to signup screen
- * - onLoginSuccess called when login completes successfully
- */
 @Composable
 fun LoginScreen(
     viewModel: AuthViewModel,

@@ -67,7 +67,7 @@ class KtorAuthRepository : AuthRepository {
         defaultRequest {
             // When running on Android emulator, use 10.0.2.2 to reach host machine's localhost.
             // Ensure your Nest API is running on the host at port 3000.
-            url("http://192.168.1.5:3001/")
+            url("http://172.16.1.64:3001/")
             contentType(ContentType.Application.Json)
         }
     }
@@ -88,7 +88,7 @@ class KtorAuthRepository : AuthRepository {
             val response: HttpResponse = client.post("auth/login") {
                 setBody(LoginRequest(email, password))
             }
-
+        print(response)
             when (response.status.value) {
                 in 200..299 -> {
                     val authResponse: AuthResponse = response.body()
@@ -101,7 +101,7 @@ class KtorAuthRepository : AuthRepository {
                 }
                 401 -> Result.failure(Exception("Invalid credentials"))
                 400 -> Result.failure(Exception("Invalid request data"))
-                404 -> Result.failure(Exception("Authentication service not found"))
+                404 -> Result.failure(Exception("Not found"))
                 500 -> Result.failure(Exception("Server error, please try again later"))
                 else -> {
                     val errorMessage = response.body<AuthResponse>().message ?: "Login failed with status ${response.status}"
@@ -113,13 +113,13 @@ class KtorAuthRepository : AuthRepository {
             Result.failure(Exception("Cannot connect to server."))
         } catch (e: SocketTimeoutException) {
             Log.e("AuthRepository", "Request timeout", e)
-            Result.failure(Exception("Request timeout. Please check your connection and try again."))
+            Result.failure(Exception("Request timeout."))
         } catch (e: UnknownHostException) {
             Log.e("AuthRepository", "Unknown host", e)
-            Result.failure(Exception("Cannot reach server. Please check if localhost:3000 is accessible."))
+            Result.failure(Exception("Cannot reach server."))
         } catch (e: Exception) {
             Log.e("AuthRepository", "Network error during login", e)
-            Result.failure(Exception("Network error: ${e.message}"))
+            Result.failure(Exception("Network error"))
         }
     }
 
@@ -167,13 +167,13 @@ class KtorAuthRepository : AuthRepository {
             }
         } catch (e: ConnectException) {
             Log.e("AuthRepository", "Connection failed", e)
-            Result.failure(Exception("Cannot connect to server. Is the Nest API running on localhost:3000?"))
+            Result.failure(Exception("Cannot connect to server"))
         } catch (e: SocketTimeoutException) {
             Log.e("AuthRepository", "Request timeout", e)
-            Result.failure(Exception("Request timeout. Please check your connection and try again."))
+            Result.failure(Exception("Request timeout"))
         } catch (e: UnknownHostException) {
             Log.e("AuthRepository", "Unknown host", e)
-            Result.failure(Exception("Cannot reach server. Please check if localhost:3000 is accessible."))
+            Result.failure(Exception("Cannot reach server"))
         } catch (e: Exception) {
             Log.e("AuthRepository", "Network error during signup", e)
             Result.failure(Exception("Network error: ${e.message}"))
