@@ -32,11 +32,16 @@ data class SignupRequest(
     val password: String
 )
 
+
+@Serializable
+data class TokenObject(
+    val accessToken: String // This correctly models the nested accessToken string
+)
 @Serializable
 data class AuthResponse(
-    val success: Boolean,
+//    val success: Boolean,
     val message: String? = null,
-    val token: String? = null
+    val token: TokenObject? = null
 )
 
 /**
@@ -67,7 +72,7 @@ class KtorAuthRepository : AuthRepository {
         defaultRequest {
             // When running on Android emulator, use 10.0.2.2 to reach host machine's localhost.
             // Ensure your Nest API is running on the host at port 3000.
-            url("http://172.16.1.64:3001/")
+            url("http://172.16.9.112:3001/")
             contentType(ContentType.Application.Json)
         }
     }
@@ -92,7 +97,7 @@ class KtorAuthRepository : AuthRepository {
             when (response.status.value) {
                 in 200..299 -> {
                     val authResponse: AuthResponse = response.body()
-                    if (authResponse.success) {
+                    if (authResponse!=null) {
                         Log.d("AuthRepository", "Login successful for $email")
                         Result.success(Unit)
                     } else {
@@ -149,7 +154,7 @@ class KtorAuthRepository : AuthRepository {
             when (response.status.value) {
                 in 200..299 -> {
                     val authResponse: AuthResponse = response.body()
-                    if (authResponse.success) {
+                    if (authResponse != null) {
                         Log.d("AuthRepository", "Signup successful for $email")
                         Result.success(Unit)
                     } else {
@@ -193,10 +198,16 @@ class KtorAuthRepository : AuthRepository {
                 setBody(mapOf("email" to email))
             }
 
+
+// If you want to see the response body as a string, you can do this:
+
+            Log.d("AuthRepository", "Password Reset Response Body: $response")
+
+
             when (response.status.value) {
                 in 200..299 -> {
                     val authResponse: AuthResponse = response.body()
-                    if (authResponse.success) {
+                    if (authResponse!=null) {
                         Result.success(Unit)
                     } else {
                         Result.failure(Exception(authResponse.message ?: "Failed to send reset code"))
@@ -247,7 +258,7 @@ class KtorAuthRepository : AuthRepository {
             when (response.status.value) {
                 in 200..299 -> {
                     val authResponse: AuthResponse = response.body()
-                    if (authResponse.success) {
+                    if (authResponse!=null) {
                         Result.success(Unit)
                     } else {
                         Result.failure(Exception(authResponse.message ?: "Failed to reset password"))
@@ -277,45 +288,3 @@ class KtorAuthRepository : AuthRepository {
     }
 }
 
-/**
- * A fake implementation used for UI wiring. Replace with real network calls.
- * Keeping this for testing purposes.
- */
-class FakeAuthRepository : AuthRepository {
-    override suspend fun login(email: String, password: String): Result<Unit> {
-        // simulate network latency
-        kotlinx.coroutines.delay(800)
-        return if (email.contains("@") && password.length >= 6) {
-            Result.success(Unit)
-        } else {
-            Result.failure(IllegalArgumentException("Invalid credentials"))
-        }
-    }
-
-    override suspend fun signup(name: String, email: String, password: String): Result<Unit> {
-        kotlinx.coroutines.delay(1000)
-        return if (name.isNotBlank() && email.contains("@") && password.length >= 6) {
-            Result.success(Unit)
-        } else {
-            Result.failure(IllegalArgumentException("Invalid signup data"))
-        }
-    }
-
-    override suspend fun requestPasswordReset(email: String): Result<Unit> {
-        kotlinx.coroutines.delay(500)
-        return if (email.contains("@")) {
-            Result.success(Unit)
-        } else {
-            Result.failure(IllegalArgumentException("Invalid email"))
-        }
-    }
-
-    override suspend fun resetPassword(email: String, code: String, newPassword: String): Result<Unit> {
-        kotlinx.coroutines.delay(500)
-        return if (email.contains("@") && code == "123456" && newPassword.length >= 6) {
-            Result.success(Unit)
-        } else {
-            Result.failure(IllegalArgumentException("Invalid code or password"))
-        }
-    }
-}
