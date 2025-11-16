@@ -16,6 +16,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.myapplication.ui.auth.ChatPage
+import com.example.myapplication.viewModel.AiConversationViewModel
 import com.example.myapplication.ui.auth.LoginScreen
 import com.example.myapplication.ui.auth.SignupScreen
 import com.example.myapplication.ui.auth.AuthViewModel
@@ -23,6 +25,7 @@ import com.example.myapplication.ui.auth.RequestResetCodeScreen
 import com.example.myapplication.ui.auth.CodeInputScreen
 import com.example.myapplication.ui.auth.NewPasswordScreen
 import com.example.myapplication.ui.theme.MyApplicationTheme
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,7 +50,7 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
             LoginScreen(
                 viewModel = vm,
                 onSignupRequested = { navController.navigate("signup") },
-                onLoginSuccess = { /* TODO: navigate to home */ },
+                onLoginSuccess = { navController.navigate("chat") },
                 onForgotPassword = { navController.navigate("forgot_password_request") }
             )
         }
@@ -93,9 +96,14 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                 }
             )
         }
-        composable("home") {
-            Text(text = "Home screen (replace with your app's home)")
-        }
+composable("chat") {
+    val vm: AiConversationViewModel = viewModel()
+    ChatPage(
+        viewModel = vm,
+        userId = "user",
+        onMenuClick = {}
+    )
+}
     }
 }
 
