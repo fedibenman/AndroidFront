@@ -114,7 +114,7 @@ fun RequestResetCodeScreen(
                     },
                     singleLine = true,
                     textStyle = TextStyle(
-                        color = Color.White,
+                        color = Color.Black,
                         fontFamily = PressStart,
                         fontWeight = FontWeight.Normal
                     ),
@@ -123,9 +123,9 @@ fun RequestResetCodeScreen(
                             Text(
                                 text = "Enter your email",
                                 style = TextStyle(
-                                    color = Color.LightGray,
-                                    fontFamily = PressStart,
-                                    fontWeight = FontWeight.Normal
+                                color = Color.DarkGray,
+                                fontFamily = PressStart,
+                                fontWeight = FontWeight.Normal
                                 )
                             )
                         }
@@ -211,7 +211,7 @@ fun RequestResetCodeScreen(
                 contentDescription = "the reset password message",
                 modifier = Modifier
                     .padding(end = 16.dp)
-                    .size(30.dp)
+                    .width(300.dp).height(150.dp)
             )
 
 
@@ -276,13 +276,7 @@ fun CodeInputScreen(
                 ),
                 modifier = Modifier.padding(bottom = 24.dp)
             )
-            Image(
-                painter = painterResource(id = R.drawable.reset_message),
-                contentDescription = "Email Icon",
-                modifier = Modifier
-                    .padding(end = 16.dp)
-                    .size(30.dp)
-            )
+
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -311,7 +305,7 @@ fun CodeInputScreen(
                             },
                             singleLine = true,
                             textStyle = TextStyle(
-                                color = Color.White,
+                                color = Color.Black,
                                 fontFamily = PressStart,
                                 fontWeight = FontWeight.Normal
                             ),

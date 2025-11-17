@@ -62,7 +62,7 @@ fun PasswordTextField(
             onValueChange = onValueChange,
             singleLine = true,
             textStyle = TextStyle(
-                color = Color.White,
+                color = Color.Black,
                 fontFamily = PressStart,
                 fontWeight = FontWeight.Normal
             ),
@@ -75,7 +75,7 @@ fun PasswordTextField(
                     Text(
                         text = Placeholder,
                         style = TextStyle(
-                            color = Color.LightGray,
+                            color = Color.DarkGray,
                             fontFamily = PressStart,
                             fontWeight = FontWeight.Normal
                         )

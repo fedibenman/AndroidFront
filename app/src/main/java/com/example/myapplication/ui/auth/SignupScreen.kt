@@ -108,7 +108,7 @@ fun SignupScreen(
                     },
                     singleLine = true,
                     textStyle = TextStyle(
-                        color = Color.White,
+                        color = Color.Black,
                         fontFamily = PressStart,
                         fontWeight = FontWeight.Normal
                     ),
@@ -117,9 +117,9 @@ fun SignupScreen(
                             Text(
                                 text = "Enter your name",
                                 style = TextStyle(
-                                    color = Color.LightGray,
-                                    fontFamily = PressStart,
-                                    fontWeight = FontWeight.Normal
+                                color = Color.DarkGray,
+                                fontFamily = PressStart,
+                                fontWeight = FontWeight.Normal
                                 )
                             )
                         }
@@ -176,7 +176,7 @@ fun SignupScreen(
                     },
                     singleLine = true,
                     textStyle = TextStyle(
-                        color = Color.White,
+                        color = Color.Black,
                         fontFamily = PressStart,
                         fontWeight = FontWeight.Normal
                     ),
@@ -185,9 +185,9 @@ fun SignupScreen(
                             Text(
                                 text = "Enter your email",
                                 style = TextStyle(
-                                    color = Color.LightGray,
-                                    fontFamily = PressStart,
-                                    fontWeight = FontWeight.Normal
+                                color = Color.DarkGray,
+                                fontFamily = PressStart,
+                                fontWeight = FontWeight.Normal
                                 )
                             )
                         }

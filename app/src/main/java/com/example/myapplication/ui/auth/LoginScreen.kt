@@ -123,7 +123,7 @@ fun LoginScreen(
                     },
                     singleLine = true,
                     textStyle = TextStyle(
-                        color = Color.White,
+                        color = Color.Black,
                         fontFamily = PressStart,
                         fontWeight = FontWeight.Normal
                     ),
@@ -132,7 +132,7 @@ fun LoginScreen(
                             Text(
                                 text = "Enter your email",
                                 style = TextStyle(
-                                    color = Color.LightGray,
+                                    color = Color.DarkGray,
                                     fontFamily = PressStart,
                                     fontWeight = FontWeight.Normal
                                 )

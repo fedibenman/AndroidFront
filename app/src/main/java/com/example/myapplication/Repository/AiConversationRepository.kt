@@ -55,7 +55,7 @@ object ApiClient {
         }
     }
 
-    const val BASE_URL = "http://YOUR_API_URL/api/ai-conversations"
+    const val BASE_URL = "http://192.168.140.182:3001/ai-conversations"
 }
 
 
