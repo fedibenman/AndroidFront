@@ -76,6 +76,10 @@ class TokenDataStoreManager(context: Context) {
         dao.upsert(AuthTokenEntity(accessToken = accessToken, refreshToken = refreshToken))
     }
 
+    suspend fun saveAccessTokenOnly(accessToken: String) {
+        dao.upsert(AuthTokenEntity(accessToken = accessToken, refreshToken = null))
+    }
+
     suspend fun clearTokens() {
         dao.clear()
     }

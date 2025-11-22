@@ -4,10 +4,12 @@ package com.example.myapplication
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -15,15 +17,18 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.myapplication.ui.auth.ChatPage
-import com.example.myapplication.viewModel.AiConversationViewModel
 import com.example.myapplication.ui.auth.LoginScreen
 import com.example.myapplication.ui.auth.SignupScreen
 import com.example.myapplication.ui.auth.AuthViewModel
 import com.example.myapplication.ui.auth.RequestResetCodeScreen
 import com.example.myapplication.ui.auth.CodeInputScreen
 import com.example.myapplication.ui.auth.NewPasswordScreen
+import com.example.myapplication.ui.auth.ProfileScreen
+import com.example.myapplication.ui.components.MainBottomNavigationBar
 import com.example.myapplication.ui.theme.MyApplicationTheme
+import com.example.myapplication.viewModel.AiConversationViewModel
 
 
 class MainActivity : ComponentActivity() {
@@ -94,12 +99,52 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
         }
 composable("chat") {
     val vm: AiConversationViewModel = viewModel()
-    ChatPage(
-        viewModel = vm,
-        userId = "user",
-        onMenuClick = {}
+    MainScreen(
+        navController = navController,
+        content = {
+            ChatPage(
+                viewModel = vm,
+                userId = "123e4567-e89b-12d3-a456-426614174000"
+            )
+        }
     )
 }
+
+composable("profile") {
+    MainScreen(
+        navController = navController,
+        content = {
+            ProfileScreen {
+                navController.popBackStack()
+            }
+        }
+    )
+}
+    }
+}
+
+/**
+ * Main screen composable that includes bottom navigation
+ */
+@Composable
+fun MainScreen(
+    navController: NavHostController,
+    content: @Composable () -> Unit
+) {
+    Scaffold(
+        bottomBar = {
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentRoute = navBackStackEntry?.destination?.route
+            
+            // Only show bottom navigation for main screens (chat and profile)
+            if (currentRoute in listOf("chat", "profile")) {
+                MainBottomNavigationBar(navController = navController)
+            }
+        }
+    ) { padding ->
+        Box(modifier = Modifier.padding(padding)) {
+            content()
+        }
     }
 }
 

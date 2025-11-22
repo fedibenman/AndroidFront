@@ -1,20 +1,24 @@
 package com.example.myapplication.Repository
 
+import android.util.Log
+import com.example.myapplication.AppContextHolder
+import com.example.myapplication.ui.auth.TokenDataStoreManager
 import io.ktor.client.call.*
 import io.ktor.client.request.*
-import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.statement.bodyAsText
 import io.ktor.serialization.kotlinx.json.*
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.Serializable
 
 class AiConversationRepository {
-
     private val client = ApiClient.client
     private val baseUrl = ApiClient.BASE_URL
+
 
     // Create a conversation
     suspend fun createConversation(dto: CreateConversationDto): Conversation {
@@ -24,14 +28,31 @@ class AiConversationRepository {
         }.body()
     }
 
-    // Get all conversations for a user
-    suspend fun getConversations(userId: String, status: String? = null): List<Conversation> {
-        val url = "$baseUrl?userId=$userId" + (status?.let { "&status=$it" } ?: "")
-        return client.get(url).body()
+    suspend fun createNewConversationOnServer(dto: CreateConversationDto): Conversation {
+        // Send POST request to /ai-conversation endpoint
+        return client.post("$baseUrl") {
+            contentType(ContentType.Application.Json)
+            setBody(dto)
+        }.body()
     }
+
+    // Get all conversations for a user
+    suspend fun getConversations(userId: String, token: String): List<Conversation> {
+        Log.e("Error", "got the cnvos")
+
+        val url = "$baseUrl?userId=$userId"
+
+        return client.get(url) {
+            headers {
+                append("Authorization", "Bearer $token")
+            }
+        }.body()
+    }
+
 
     // Create a message
     suspend fun createMessage(conversationId: String, dto: CreateMessageDto): Message {
+        Log.e("sending" , dto.toString())
         return client.post("$baseUrl/$conversationId/messages") {
             contentType(ContentType.Application.Json)
             setBody(dto)
@@ -41,6 +62,72 @@ class AiConversationRepository {
     // Get all messages
     suspend fun getMessages(conversationId: String, userId: String): List<Message> {
         return client.get("$baseUrl/$conversationId/messages?userId=$userId").body()
+    }
+
+    // Edit a message
+    suspend fun editMessage(messageId: String, newText: String): Message {
+        Log.d("AiConversationRepository", "Starting editMessage: messageId=$messageId, newText=$newText")
+        try {
+            val url = "$baseUrl/messages/$messageId"
+            Log.d("AiConversationRepository", "Making PUT request to URL: $url")
+            
+            val requestBody = mapOf("content" to newText)
+            Log.d("AiConversationRepository", "Request body: $requestBody")
+            
+            val response = client.put(url) {
+                contentType(ContentType.Application.Json)
+                setBody(requestBody)
+            }
+            
+            // Log the response body to see what the server actually returns
+            val responseText = response.bodyAsText()
+            Log.d("AiConversationRepository", "Message update response body: $responseText")
+            
+            val result = response.body<Message>()
+            Log.d("AiConversationRepository", "Edit message successful: ${result.id}")
+            return result
+        } catch (e: Exception) {
+            Log.e("AiConversationRepository", "Error editing message messageId=$messageId", e)
+            throw e
+        }
+    }
+
+    // Delete a message
+    suspend fun deleteMessage(messageId: String) {
+        client.delete("$baseUrl/messages/$messageId")
+    }
+
+    // Edit a conversation title
+    suspend fun editConversation(conversationId: String, title: String): Conversation {
+        Log.d("AiConversationRepository", "Starting editConversation: conversationId=$conversationId, title=$title")
+        try {
+            val url = "$baseUrl/$conversationId"
+            Log.d("AiConversationRepository", "Making PUT request to URL: $url")
+            
+            val requestBody = mapOf("title" to title)
+            Log.d("AiConversationRepository", "Request body: $requestBody")
+            
+            val response = client.put(url) {
+                contentType(ContentType.Application.Json)
+                setBody(requestBody)
+            }
+            
+            // Log the response body to see what the server actually returns
+            val responseText = response.bodyAsText()
+            Log.d("AiConversationRepository", "Response body: $responseText")
+            
+            val result = response.body<Conversation>()
+            Log.d("AiConversationRepository", "Edit conversation successful: ${result.id}")
+            return result
+        } catch (e: Exception) {
+            Log.e("AiConversationRepository", "Error editing conversation conversationId=$conversationId", e)
+            throw e
+        }
+    }
+
+    // Delete a conversation
+    suspend fun deleteConversation(conversationId: String) {
+        client.delete("$baseUrl/$conversationId")
     }
 }
 
@@ -55,7 +142,7 @@ object ApiClient {
         }
     }
 
-    const val BASE_URL = "http://192.168.140.182:3001/ai-conversations"
+    const val BASE_URL = "http://192.168.225.182:3001/ai-conversations"
 }
 
 
@@ -64,30 +151,38 @@ object ApiClient {
 
 @Serializable
 data class Conversation(
-    val id: String,
-    val userId: String,
+    @SerialName("_id") val id: String,
     val title: String,
-    val status: String
+    @SerialName("userId") val userId: String,
+    val messages: List<String>? = null,
+    val createdAt: String? = null,
+    val updatedAt: String? = null,
+    @SerialName("__v") val v: Int? = null
 )
 
-@Serializable
-data class Message(
-    val id: String,
-    val conversationId: String,
-    val senderId: String,
-    val content: String,
-    val timestamp: String
-)
 
 @Serializable
 data class CreateConversationDto(
-    val userId: String,
-    val title: String
+    val title: String,
+    val userId: String
+)
+
+
+
+@Serializable
+data class Message(
+    @SerialName("_id") val id: String,
+    val conversationId: String,
+    val sender: String = "sender",
+    val content: String,
+    val timestamp: String? = null,
 )
 
 @Serializable
 data class CreateMessageDto(
     var conversationId: String = "",
     val userId: String,
-    val content: String
+    val content: String ,
+    val sender: String ="user"
+
 )

@@ -104,7 +104,7 @@ fun SignupScreen(
                     value = name,
                     onValueChange = {
                         name = it
-                        viewModel.clearError()
+                        viewModel.clearErrors()
                     },
                     singleLine = true,
                     textStyle = TextStyle(
@@ -172,7 +172,7 @@ fun SignupScreen(
                     value = email,
                     onValueChange = {
                         email = it
-                        viewModel.clearError()
+                        viewModel.clearErrors()
                     },
                     singleLine = true,
                     textStyle = TextStyle(
@@ -227,7 +227,7 @@ fun SignupScreen(
                 value = password,
                 onValueChange = {
                     password = it
-                    viewModel.clearError()
+                    viewModel.clearErrors()
                 },
                 isError = false,
                 modifier = Modifier.fillMaxWidth(),
@@ -249,7 +249,7 @@ fun SignupScreen(
                 value = password,
                 onValueChange = {
                     password = it
-                    viewModel.clearError()
+                    viewModel.clearErrors()
                 },
                 isError = false,
                 modifier = Modifier.fillMaxWidth(),
@@ -257,9 +257,9 @@ fun SignupScreen(
             )
             Spacer(Modifier.height(12.dp))
 
-            if (viewModel.errorMessage != null) {
+            if (viewModel.generalError != null) {
                 Text(
-                    text = viewModel.errorMessage ?: "",
+                    text = viewModel.generalError ?: "",
                     color = Color.Red,
                     style = TextStyle(
                         fontFamily = PressStart,

@@ -29,6 +29,7 @@ import com.example.myapplication.R
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.example.myapplication.ui.theme.PressStart
 
+
 /**
  * Screen 1: Request password reset code (by email).
  */
@@ -110,7 +111,7 @@ fun RequestResetCodeScreen(
                     value = email.value,
                     onValueChange = {
                         email.value = it
-                        viewModel.clearError()
+                        viewModel.clearErrors()
                     },
                     singleLine = true,
                     textStyle = TextStyle(
@@ -148,9 +149,9 @@ fun RequestResetCodeScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            if (viewModel.errorMessage != null) {
+            if (viewModel.generalError != null) {
                 Text(
-                    text = viewModel.errorMessage ?: "",
+                    text = viewModel.generalError ?: "",
                     color = Color.Red,
                     style = TextStyle(
                         fontFamily = PressStart,
@@ -300,7 +301,7 @@ fun CodeInputScreen(
                                 val filtered = input.takeLast(1).filter { it.isDigit() }
                                 if (filtered.length <= 1) {
                                     digits[i] = filtered
-                                    viewModel.clearError()
+                                    viewModel.clearErrors()
                                 }
                             },
                             singleLine = true,
@@ -320,9 +321,9 @@ fun CodeInputScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            if (viewModel.errorMessage != null) {
+            if (viewModel.generalError != null) {
                 Text(
-                    text = viewModel.errorMessage ?: "",
+                    text = viewModel.generalError ?: "",
                     color = Color.Red,
                     style = TextStyle(
                         fontFamily = PressStart,
@@ -460,7 +461,7 @@ fun NewPasswordScreen(
                 value = viewModel.newPassword,
                 onValueChange = {
                     viewModel.newPassword = it
-                    viewModel.clearError()
+                    viewModel.clearErrors()
                 },
                 isError = false,
                 modifier = Modifier.fillMaxWidth(),
@@ -486,7 +487,7 @@ fun NewPasswordScreen(
                 value = confirmPassword,
                 onValueChange = {
                     confirmPassword = it
-                    viewModel.clearError()
+                    viewModel.clearErrors()
                 },
                 isError = false,
                 modifier = Modifier.fillMaxWidth(),
@@ -495,9 +496,9 @@ fun NewPasswordScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            if (viewModel.errorMessage != null) {
+            if (viewModel.generalError != null) {
                 Text(
-                    text = viewModel.errorMessage ?: "",
+                    text = viewModel.generalError ?: "",
                     color = Color.Red,
                     style = TextStyle(
                         fontFamily = PressStart,

@@ -30,28 +30,16 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onForgotPassword: () -> Unit
 ) {
-    
-    
-    
-    
-
     Box(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
-        // 🖼️ Background image
+        // Background image
         Image(
             painter = painterResource(id = R.drawable.background_general),
             contentDescription = "Background",
             contentScale = ContentScale.Crop,
             modifier = Modifier.matchParentSize()
         )
-
-        
-        var email by remember { mutableStateOf("") }
-        var password by remember { mutableStateOf("") }
-        var emailError by remember { mutableStateOf<String?>(null) }
-        var passwordError by remember { mutableStateOf<String?>(null) }
 
         Column(
             modifier = Modifier
@@ -61,6 +49,7 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
             // Title
             Text(
                 text = "Creation",
@@ -68,10 +57,9 @@ fun LoginScreen(
                     fontFamily = PressStart,
                     fontWeight = FontWeight.Normal,
                     color = Color.Black,
-                    fontSize = 22.sp,
+                    fontSize = 22.sp
                 ),
-                modifier = Modifier
-                    .padding(bottom = 4.dp)
+                modifier = Modifier.padding(bottom = 4.dp)
             )
 
             // Subtitle
@@ -82,90 +70,67 @@ fun LoginScreen(
                     fontWeight = FontWeight.Normal,
                     color = Color.Black
                 ),
-                modifier = Modifier
-                    .padding(bottom = 24.dp)
+                modifier = Modifier.padding(bottom = 24.dp)
             )
+
+            // Display general error
+            viewModel.generalError?.let { error ->
+                Text(
+                    text = error,
+                    color = Color.Red,
+                    style = TextStyle(fontFamily = PressStart),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
 
             // Email label
             Text(
                 text = "EMAIL",
-                style = TextStyle(
-                    fontFamily = PressStart,
-                    fontWeight = FontWeight.Normal,
-                    color = Color.Black
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 4.dp, bottom = 4.dp)
+                style = TextStyle(fontFamily = PressStart, fontWeight = FontWeight.Normal, color = Color.Black),
+                modifier = Modifier.fillMaxWidth().padding(start = 4.dp, bottom = 4.dp)
             )
 
-            // Email input with background image
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp)
-            ) {
+            // Email input with background
+            Box(modifier = Modifier.fillMaxWidth().height(60.dp)) {
                 Image(
                     painter = painterResource(
-                        id = if (emailError != null) R.drawable.input_error else R.drawable.input
+                        id = if (viewModel.emailError != null) R.drawable.input_error else R.drawable.input
                     ),
-                    contentDescription = "Email Input Background",
-                    modifier = Modifier
-                        .matchParentSize(),
+                    contentDescription = null,
+                    modifier = Modifier.matchParentSize(),
                     contentScale = ContentScale.FillBounds
                 )
 
                 BasicTextField(
-                    value = email,
-                    onValueChange = {
-                        email = it
-                        emailError = null
-                    },
+                    value = viewModel.email,
+                    onValueChange = { viewModel.email = it; viewModel.emailError = null },
                     singleLine = true,
-                    textStyle = TextStyle(
-                        color = Color.Black,
-                        fontFamily = PressStart,
-                        fontWeight = FontWeight.Normal
-                    ),
+                    textStyle = TextStyle(color = Color.Black, fontFamily = PressStart),
                     decorationBox = { innerTextField ->
-                        if (email.isEmpty()) {
+                        if (viewModel.email.isEmpty()) {
                             Text(
                                 text = "Enter your email",
-                                style = TextStyle(
-                                    color = Color.DarkGray,
-                                    fontFamily = PressStart,
-                                    fontWeight = FontWeight.Normal
-                                )
+                                style = TextStyle(color = Color.DarkGray, fontFamily = PressStart)
                             )
                         }
                         innerTextField()
                     },
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .padding(start = 24.dp, end = 24.dp)
+                    modifier = Modifier.align(Alignment.CenterStart).padding(start = 24.dp, end = 24.dp)
                 )
 
                 Image(
                     painter = painterResource(id = R.drawable.globe),
                     contentDescription = "Email Icon",
-                    modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .padding(end = 16.dp)
-                        .size(30.dp)
+                    modifier = Modifier.align(Alignment.CenterEnd).padding(end = 16.dp).size(30.dp)
                 )
             }
 
-            if (emailError != null) {
+            viewModel.emailError?.let { error ->
                 Text(
-                    text = emailError ?: "",
+                    text = error,
                     color = Color.Red,
-                    style = TextStyle(
-                        fontFamily = PressStart,
-                        fontWeight = FontWeight.Normal
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 4.dp, top = 4.dp)
+                    style = TextStyle(fontFamily = PressStart),
+                    modifier = Modifier.fillMaxWidth().padding(start = 4.dp, top = 4.dp)
                 )
             }
 
@@ -174,114 +139,109 @@ fun LoginScreen(
             // Password label
             Text(
                 text = "PASSWORD",
-                style = TextStyle(
-                    fontFamily = PressStart,
-                    fontWeight = FontWeight.Normal,
-                    color = Color.Black
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 4.dp, bottom = 4.dp)
+                style = TextStyle(fontFamily = PressStart, fontWeight = FontWeight.Normal, color = Color.Black),
+                modifier = Modifier.fillMaxWidth().padding(start = 4.dp, bottom = 4.dp)
             )
 
-            // Password input with background image + eye toggle
             PasswordTextField(
-                value = password,
-                onValueChange = {
-                    password = it
-                    passwordError = null
-                },
-                Placeholder = "Enter your password",                isError = passwordError != null,
-                modifier = Modifier
-                    .fillMaxWidth()
+                value = viewModel.password,
+                onValueChange = { viewModel.password = it; viewModel.passwordError = null },
+                Placeholder = "Enter your password",
+                isError = viewModel.passwordError != null,
+                modifier = Modifier.fillMaxWidth()
             )
 
-            if (passwordError != null) {
+            viewModel.passwordError?.let { error ->
                 Text(
-                    text = passwordError ?: "",
+                    text = error,
                     color = Color.Red,
-                    style = TextStyle(
-                        fontFamily = PressStart,
-                        fontWeight = FontWeight.Normal
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 4.dp, top = 4.dp)
+                    style = TextStyle(fontFamily = PressStart),
+                    modifier = Modifier.fillMaxWidth().padding(start = 4.dp, top = 4.dp)
                 )
             }
 
             // Forgot password
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 TextButton(onClick = onForgotPassword) {
                     Text(
                         "Forgot password?",
-                        style = TextStyle(
-                            fontFamily = PressStart,
-                            fontWeight = FontWeight.Normal,
-                            color = Color.Red
-                        )
+                        style = TextStyle(fontFamily = PressStart, color = Color.Red)
                     )
                 }
             }
-            // Login button with centered text inside image
-Box(
-    modifier = Modifier
-        .fillMaxWidth()
-        .height(70.dp)
-        .clickable {
-            viewModel.login { success ->
-                if (success) onLoginSuccess()
+
+
+
+            Spacer(Modifier.height(8.dp))
+
+            // Login button
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(70.dp)
+                    .clickable(enabled = !viewModel.isLoading) {
+                        viewModel.login(viewModel.rememberMe) { success ->
+                            if (success) onLoginSuccess()
+                        }
+                    }
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.button),
+                    contentDescription = null,
+                    modifier = Modifier.matchParentSize(),
+                    contentScale = ContentScale.FillBounds
+                )
+
+                if (viewModel.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = "LOGIN",
+                        style = TextStyle(fontFamily = PressStart, color = Color.White),
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
             }
-        }
-) {
-    Image(
-        painter = painterResource(id = R.drawable.button),
-        contentDescription = "Login Button",
-        modifier = Modifier
-            .matchParentSize(),
-        contentScale = ContentScale.FillBounds
-    )
+            Spacer(Modifier.height(300.dp))
 
-    Text(
-        text = "LOGIN",
-        style = TextStyle(
-            fontFamily = PressStart,
-            fontWeight = FontWeight.Normal,
-            color = Color.White
-        ),
-        modifier = Modifier.align(Alignment.Center)
-    )
-}
-
+            // Remember me checkbox
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start
+            ) {
+                Checkbox(
+                    checked = viewModel.rememberMe,
+                    onCheckedChange = { viewModel.rememberMe = it }
+                )
+                Text(
+                    text = "Remember me",
+                    style = TextStyle(
+                        fontFamily = PressStart,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.Black,
+                        fontSize = 16.sp
+                    ),
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
             Spacer(Modifier.height(10.dp))
-
-
 
             // Signup prompt
             Text(
                 text = "new adventure?",
-                style = TextStyle(
-                    fontFamily = PressStart,
-                    fontWeight = FontWeight.Normal,
-                    color = Color.Black
-                ),
-                modifier = Modifier
-                    .padding(top = 8.dp)
+                style = TextStyle(fontFamily = PressStart, color = Color.Black),
+                modifier = Modifier.padding(top = 8.dp)
             )
 
             TextButton(onClick = onSignupRequested) {
                 Text(
                     text = "create account",
-                    style = TextStyle(
-                        fontFamily = PressStart,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 18.sp,
-                        color = Color.Yellow
-                    )
+                    style = TextStyle(fontFamily = PressStart, fontSize = 18.sp, color = Color.Yellow)
                 )
             }
         }
