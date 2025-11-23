@@ -25,10 +25,17 @@ import com.example.myapplication.ui.auth.AuthViewModel
 import com.example.myapplication.ui.auth.RequestResetCodeScreen
 import com.example.myapplication.ui.auth.CodeInputScreen
 import com.example.myapplication.ui.auth.NewPasswordScreen
-import com.example.myapplication.ui.auth.ProfileScreen
+import com.example.myapplication.ui.auth. ProfileScreen
 import com.example.myapplication.ui.components.MainBottomNavigationBar
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.example.myapplication.viewModel.AiConversationViewModel
+import com.example.myapplication.community.ui.screens.CommunityScreen
+import com.example.myapplication.community.ui.screens.CreatePostScreen
+import com.example.myapplication.community.ui.screens.EditPostScreen
+import com.example.myapplication.community.viewmodel.PostViewModel
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import androidx.compose.runtime.LaunchedEffect
 
 
 class MainActivity : ComponentActivity() {
@@ -43,8 +50,12 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+
 @Composable
 fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) {
+    // Shared ViewModel for Community features
+    val postViewModel: PostViewModel = viewModel()
+
     NavHost(navController = navController, startDestination = "login") {
         composable("login") {
             val vm: AuthViewModel = viewModel()
@@ -97,29 +108,65 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                 }
             )
         }
-composable("chat") {
-    val vm: AiConversationViewModel = viewModel()
-    MainScreen(
-        navController = navController,
-        content = {
-            ChatPage(
-                viewModel = vm,
-                userId = "123e4567-e89b-12d3-a456-426614174000"
+        composable("chat") {
+            val vm: AiConversationViewModel = viewModel()
+            MainScreen(
+                navController = navController,
+                content = {
+                    ChatPage(
+                        viewModel = vm,
+                        userId = "123e4567-e89b-12d3-a456-426614174000"
+                    )
+                }
             )
         }
-    )
-}
-
-composable("profile") {
-    MainScreen(
-        navController = navController,
-        content = {
-            ProfileScreen {
-                navController.popBackStack()
-            }
+        composable("profile") {
+            MainScreen(
+                navController = navController,
+                content = {
+                    ProfileScreen {
+                        navController.popBackStack()
+                    }
+                }
+            )
         }
-    )
-}
+        composable("community") {
+            // Refresh posts when entering the screen
+            LaunchedEffect(Unit) {
+                postViewModel.loadPosts()
+            }
+            
+            MainScreen(
+                navController = navController,
+                content = {
+                    CommunityScreen(
+                        postViewModel = postViewModel,
+                        onCreatePost = { navController.navigate("create_post") },
+                        onEditPost = { post -> navController.navigate("edit_post/${post._id}") },
+                        onDeletePost = { post -> post._id?.let { postViewModel.deletePost(it) {} } }
+                    )
+                }
+            )
+        }
+        composable("create_post") {
+            CreatePostScreen(
+                postViewModel = postViewModel,
+                onBack = { navController.popBackStack() },
+                onPostCreated = { navController.popBackStack() }
+            )
+        }
+        composable(
+            "edit_post/{postId}",
+            arguments = listOf(navArgument("postId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val postId = backStackEntry.arguments?.getString("postId") ?: return@composable
+            EditPostScreen(
+                postId = postId,
+                postViewModel = postViewModel,
+                onBack = { navController.popBackStack() },
+                onUpdated = { navController.popBackStack() }
+            )
+        }
     }
 }
 
@@ -136,8 +183,8 @@ fun MainScreen(
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route
             
-            // Only show bottom navigation for main screens (chat and profile)
-            if (currentRoute in listOf("chat", "profile")) {
+            // Only show bottom navigation for main screens (chat, profile, community)
+            if (currentRoute in listOf("chat", "profile", "community")) {
                 MainBottomNavigationBar(navController = navController)
             }
         }

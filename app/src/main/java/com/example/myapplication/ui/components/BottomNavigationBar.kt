@@ -27,6 +27,11 @@ fun MainBottomNavigationBar(
             label = "Chat"
         ),
         BottomNavigationItem(
+            route = "community",
+            icon = R.drawable.globe,
+            label = "Community"
+        ),
+        BottomNavigationItem(
             route = "profile", 
             icon = R.drawable.user,
             label = "Profile"
