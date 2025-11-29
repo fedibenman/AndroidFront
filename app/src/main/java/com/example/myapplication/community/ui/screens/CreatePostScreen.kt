@@ -25,6 +25,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.R
 import com.example.myapplication.community.viewmodel.PostViewModel
+import com.example.myapplication.ui.theme.PixelBlack
+import com.example.myapplication.ui.theme.PixelBlue
+import com.example.myapplication.ui.theme.PixelGray
+import com.example.myapplication.ui.theme.PixelGreen
+import com.example.myapplication.ui.theme.PixelRed
+import com.example.myapplication.ui.theme.PixelWhite
 import com.example.myapplication.ui.theme.PressStart
 
 @Composable

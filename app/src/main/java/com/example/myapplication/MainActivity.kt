@@ -55,6 +55,8 @@ class MainActivity : ComponentActivity() {
 fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) {
     // Shared ViewModel for Community features
     val postViewModel: PostViewModel = viewModel()
+    // Shared ViewModel for Chat features
+    val chatViewModel: com.example.myapplication.chat.viewmodel.ChatViewModel = viewModel()
 
     NavHost(navController = navController, startDestination = "login") {
         composable("login") {
@@ -143,7 +145,8 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                         postViewModel = postViewModel,
                         onCreatePost = { navController.navigate("create_post") },
                         onEditPost = { post -> navController.navigate("edit_post/${post._id}") },
-                        onDeletePost = { post -> post._id?.let { postViewModel.deletePost(it) {} } }
+                        onDeletePost = { post -> post._id?.let { postViewModel.deletePost(it) {} } },
+                        onNavigateToChat = { navController.navigate("chat_rooms") }
                     )
                 }
             )
@@ -165,6 +168,34 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                 postViewModel = postViewModel,
                 onBack = { navController.popBackStack() },
                 onUpdated = { navController.popBackStack() }
+            )
+        }
+        composable("chat_rooms") {
+            LaunchedEffect(Unit) {
+                chatViewModel.loadRooms()
+            }
+            
+            MainScreen(
+                navController = navController,
+                content = {
+                    com.example.myapplication.chat.ui.ChatListScreen(
+                        viewModel = chatViewModel,
+                        onRoomClick = { room ->
+                            chatViewModel.selectRoom(room)
+                            navController.navigate("chat_room")
+                        }
+                    )
+                }
+            )
+        }
+        composable("chat_room") {
+            MainScreen(
+                navController = navController,
+                content = {
+                    com.example.myapplication.chat.ui.ChatScreen(
+                        viewModel = chatViewModel
+                    )
+                }
             )
         }
     }

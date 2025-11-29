@@ -46,13 +46,12 @@ import com.example.myapplication.community.model.Post
 import com.example.myapplication.community.viewmodel.PostViewModel
 import com.example.myapplication.ui.theme.PressStart
 
-// 🎨 PIXEL ART COLORS
-val PixelBlack = Color(0xFF000000)
-val PixelWhite = Color(0xFFFFFFFF)
-val PixelGray = Color(0xFFC0C0C0)
-val PixelBlue = Color(0xFF5D9CEC)
-val PixelRed = Color(0xFFAC193D)
-val PixelGreen = Color(0xFF8FCE00)
+import com.example.myapplication.ui.theme.PixelBlack
+import com.example.myapplication.ui.theme.PixelBlue
+import com.example.myapplication.ui.theme.PixelGray
+import com.example.myapplication.ui.theme.PixelGreen
+import com.example.myapplication.ui.theme.PixelRed
+import com.example.myapplication.ui.theme.PixelWhite
 
 @Composable
 fun CommunityScreen(
@@ -60,7 +59,8 @@ fun CommunityScreen(
     postViewModel: PostViewModel,
     onCreatePost: () -> Unit,
     onEditPost: (Post) -> Unit,
-    onDeletePost: (Post) -> Unit
+    onDeletePost: (Post) -> Unit,
+    onNavigateToChat: () -> Unit = {}
 ) {
     val posts by postViewModel.posts.collectAsState()
 
@@ -119,6 +119,26 @@ fun CommunityScreen(
                     )
                 }
             }
+        }
+
+        // 💬 CHAT FAB
+        FloatingActionButton(
+            onClick = onNavigateToChat,
+            containerColor = PixelBlue,
+            contentColor = PixelWhite,
+            shape = RoundedCornerShape(4.dp),
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(16.dp)
+                .size(64.dp)
+                .border(4.dp, PixelBlack, RoundedCornerShape(4.dp))
+        ) {
+            Icon(
+                Icons.AutoMirrored.Filled.Message,
+                contentDescription = "Chat Rooms",
+                tint = PixelWhite,
+                modifier = Modifier.size(32.dp)
+            )
         }
 
         // ➕ FAB PIXEL
