@@ -1,34 +1,32 @@
 package com.example.myapplication.ui.auth
 
 import android.annotation.SuppressLint
+import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import com.example.myapplication.R
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.TextStyle
-import com.example.myapplication.ui.theme.PressStart
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.myapplication.DTOs.Profile
+import com.example.myapplication.R
 import com.example.myapplication.Repository.Conversation
 import com.example.myapplication.ui.theme.MyApplicationTheme
+import com.example.myapplication.ui.theme.PressStart
 import com.example.myapplication.viewModel.AiConversationViewModel
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -44,22 +42,25 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.height
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.ui.Alignment
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.FileProvider
+import java.io.File
+import java.io.FileOutputStream
+import java.io.ByteArrayOutputStream
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.util.Base64
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import com.example.myapplication.Repository.ImageData
 
 
 @Composable
@@ -259,7 +260,8 @@ fun ConversationItem(
 fun ChatBubbleLeft(
     text: String,
     messageId: String,
-    onEditMessage: (String, String) -> Unit,
+    images: List<ImageData>,
+    onEditMessage: (String, String, List<Bitmap>) -> Unit,
     onDeleteMessage: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -274,11 +276,35 @@ fun ChatBubbleLeft(
         horizontalArrangement = Arrangement.Start // align to left
     ) {
         Column {
+            // Images displayed on top of the message bubble (outside container)
+            if (images.isNotEmpty() && !isEditing) {
+                LazyRow(
+                    modifier = Modifier
+                        .padding(bottom = 4.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    items(images.size) { idx ->
+                        val imageData = images[idx]
+                        val bitmap = imageData.base64.decodeToBitmap()
+                        
+                        Image(
+                            bitmap = bitmap.asImageBitmap(),
+                            contentDescription = imageData.fileName,
+                            modifier = Modifier
+                                .size(40.dp) // Smaller size
+                                .padding(end = 4.dp)
+                                .clip(RoundedCornerShape(4.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                }
+            }
+
             Box(
                 modifier = Modifier
                     .wrapContentWidth()
                     .wrapContentHeight()
-                    .fillMaxWidth(0.8f) // max 80% of screen width
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.container),
@@ -287,70 +313,15 @@ fun ChatBubbleLeft(
                     modifier = Modifier.matchParentSize()
                 )
                 
-                if (isEditing) {
-                    TextField(
-                        value = editText,
-                        onValueChange = { editText = it },
-                        modifier = Modifier.padding(10.dp),
-                        textStyle = TextStyle(fontSize = 16.sp),
-                        singleLine = false,
-                        maxLines = 5
-                    )
-                    Row(
-                        horizontalArrangement = Arrangement.End,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(end = 8.dp, bottom = 4.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.x_icon),
-                            contentDescription = "Cancel",
-                            tint = Color.Gray,
-                            modifier = Modifier
-                                .size(20.dp)
-                                .padding(2.dp)
-                                .clickable {
-                                    isEditing = false
-                                    editText = text // Reset to original text
-                                }
+
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Text(
+                            text,
+                            fontSize = 16.sp
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Icon(
-                            painter = painterResource(id = R.drawable.send),
-                            contentDescription = "Save",
-                            modifier = Modifier
-                                .size(20.dp)
-                                .padding(2.dp)
-                                .clickable {
-                                    onEditMessage(messageId, editText)
-                                    isEditing = false
-                                }
-                        )
-                    }
-                } else {
-                    Text(
-                        text,
-                        fontSize = 16.sp,
-                        modifier = Modifier.padding(10.dp)
-                    )
+
                 }
             }
-
-            // 3-dots menu button - positioned below the bubble
-            Row(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.drop_down_icon),
-                    contentDescription = "Menu",
-                    tint = Color.Black,
-                    modifier = Modifier
-                        .size(24.dp)
-                        .padding(4.dp)
-                        .clickable { dropdownExpanded = true }
-                )
-            }
-
 
         }
     }
@@ -362,13 +333,17 @@ fun ChatBubbleLeft(
 fun ChatBubbleRight(
     text: String,
     messageId: String,
-    onEditMessage: (String, String) -> Unit,
+    images: List<ImageData>,   // ← MESSAGE IMAGES ARE PASSED HERE
+    onEditMessage: (String, String, List<ImageData>) -> Unit,
     onDeleteMessage: (String) -> Unit,
-    onEditMessageFromDropdown: (String) -> Unit
+    onEditMessageFromDropdown: (String, List<ImageData>) -> Unit
 ) {
     var isEditing by remember { mutableStateOf(false) }
     var editText by remember { mutableStateOf(text) }
     var dropdownExpanded by remember { mutableStateOf(false) }
+
+    // Local copy for editing
+    var localImages by remember { mutableStateOf(images.toMutableList()) }
 
     Row(
         modifier = Modifier
@@ -377,77 +352,56 @@ fun ChatBubbleRight(
         horizontalArrangement = Arrangement.End
     ) {
         Column(horizontalAlignment = Alignment.End) {
+            // Images displayed on top of the message bubble (outside container)
+            if (localImages.isNotEmpty() && !isEditing) {
+                LazyRow(
+                    modifier = Modifier
+                        .padding(bottom = 7.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    items(localImages.size) { idx ->
+                        val imageData = localImages[idx]
+                        val bitmap = imageData.base64.decodeToBitmap()
+                        
+                        Image(
+                            bitmap = bitmap.asImageBitmap(),
+                            contentDescription = imageData.fileName,
+                            modifier = Modifier
+                                .size(70.dp) // Smaller size
+                                .padding(start = 4.dp)
+                                .clip(RoundedCornerShape(4.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                }
+            }
 
-            // ---------------- BUBBLE ----------------
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
                     .wrapContentHeight()
             ) {
+
                 Image(
                     painter = painterResource(id = R.drawable.container),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.matchParentSize()
                 )
+                    Column(modifier = Modifier.padding(10.dp)) {
 
-                if (isEditing) {
-                    Column(
-                        modifier = Modifier.padding(10.dp)
-                    ) {
-                        TextField(
-                            value = editText,
-                            onValueChange = { editText = it },
-                            singleLine = false,
-                            maxLines = 5,
-                            textStyle = TextStyle(fontSize = 16.sp),
-                            modifier = Modifier.fillMaxWidth()
+                        Text(
+                            text = text,
+                            fontSize = 16.sp
                         )
-
-                        Row(
-                            horizontalArrangement = Arrangement.End,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.x_icon),
-                                contentDescription = "Cancel",
-                                tint = Color.Gray,
-                                modifier = Modifier
-                                    .size(20.dp)
-                                    .padding(4.dp)
-                                    .clickable {
-                                        isEditing = false
-                                        editText = text
-                                    }
-                            )
-
-                            Spacer(modifier = Modifier.width(8.dp))
-
-                            Icon(
-                                painter = painterResource(id = R.drawable.send),
-                                contentDescription = "Save",
-                                modifier = Modifier
-                                    .size(20.dp)
-                                    .padding(4.dp)
-                                    .clickable {
-                                        onEditMessage(messageId, editText)
-                                        isEditing = false
-                                    }
-                            )
-                        }
                     }
-                } else {
-                    Text(
-                        text,
-                        fontSize = 16.sp,
-                        modifier = Modifier.padding(10.dp)
-                    )
-                }
+
             }
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // ---------------- DROPDOWN ANCHOR ----------------
+            // ------------------ DROPDOWN ------------------
             Box(
                 modifier = Modifier.wrapContentSize(Alignment.TopEnd)
             ) {
@@ -457,7 +411,6 @@ fun ChatBubbleRight(
                     tint = Color.Black,
                     modifier = Modifier
                         .size(24.dp)
-                        .padding(4.dp)
                         .clickable { dropdownExpanded = true }
                 )
 
@@ -465,14 +418,18 @@ fun ChatBubbleRight(
                     expanded = dropdownExpanded,
                     onDismissRequest = { dropdownExpanded = false }
                 ) {
+
                     DropdownMenuItem(
                         text = { Text("Edit") },
                         onClick = {
                             dropdownExpanded = false
-                            // Trigger edit mode from parent composable
-                            onEditMessageFromDropdown(messageId)
+                            isEditing = true
+                            editText = text
+                            localImages = images.toMutableList()
+                            onEditMessageFromDropdown(messageId, localImages)
                         }
                     )
+
                     DropdownMenuItem(
                         text = { Text("Delete") },
                         onClick = {
@@ -486,13 +443,20 @@ fun ChatBubbleRight(
     }
 }
 
+// Simple Base64 to Bitmap extension
+fun String.decodeToBitmap(): Bitmap {
+    val decodedBytes = Base64.decode(this, Base64.DEFAULT)
+    return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+}
+
+
+
 
 
 
 @Composable
 fun ChatPage(
-    viewModel: AiConversationViewModel,
-    userId: String
+    viewModel: AiConversationViewModel
 ) {
     val selectedConversation by viewModel.selectedConversation.collectAsState()
     val messages by viewModel.messages.collectAsState()
@@ -506,11 +470,41 @@ fun ChatPage(
     // State for tracking which message is being edited
     var editingMessageId by remember { mutableStateOf<String?>(null) }
     var isEditingMode by remember { mutableStateOf(false) }
+    
+    // Image upload state
+    var selectedImageUris by remember { mutableStateOf<MutableList<Uri>>(mutableStateListOf()) }
+    var selectedImageBitmaps by remember { mutableStateOf<MutableList<Bitmap>>(mutableStateListOf()) }
+    var showImagePreview by remember { mutableStateOf(false) }
+    
+    // Edit-specific image state
+    var editingMessageImages by remember { mutableStateOf<List<Bitmap>>(emptyList()) }
+    
+    // Context for file operations
+    val context = LocalContext.current
+    
+    // Image picker launcher
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri ->
+            if (uri != null) {
+                selectedImageUris.add(uri)
+                try {
+                    val inputStream = context.contentResolver.openInputStream(uri)
+                    val bitmap = BitmapFactory.decodeStream(inputStream)
+                    selectedImageBitmaps.add(bitmap) // Store Android Bitmap directly
+                    showImagePreview = selectedImageBitmaps.isNotEmpty()
+                    inputStream?.close()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    )
 
     val listState = rememberLazyListState()
 
-    LaunchedEffect(userId) {
-        viewModel.loadConversations(userId)
+    LaunchedEffect(Unit) {
+        viewModel.loadConversations()
     }
 
     LaunchedEffect(messages.size) {
@@ -519,11 +513,8 @@ fun ChatPage(
         }
     }
 
-    LaunchedEffect(conversations.size) {
-        if (conversations.isEmpty()) {
-            viewModel.createNewConversation("New quest", userId)
-        }
-    }
+    // Removed auto-creation of conversations here since it's now handled in loadConversations()
+    // Only create conversations when explicitly requested by user
 
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -534,14 +525,14 @@ fun ChatPage(
             DrawerContent(
                 conversations = conversations,
                 onConversationClick = { conv ->
-                    viewModel.selectConversation(conv, userId)
+                    viewModel.selectConversation(conv)
                     scope.launch { drawerState.close() }
                 },
                 onStartAddingNewConversation = {},
                 isAddingNewConversation = false,
                 newConversationTitleInput = "",
                 onUpdateNewConversationTitle = {},
-                onCreateNewConversation = { title -> viewModel.createNewConversation(title, userId) },
+                onCreateNewConversation = { title -> viewModel.createNewConversation(title) },
                 onCancelAddingNewConversation = {},
                 onClose = { scope.launch { drawerState.close() } },
                 onEditConversation = { conversation, newTitle -> 
@@ -622,19 +613,36 @@ fun ChatPage(
                         ChatBubbleRight(
                             text = msg.content,
                             messageId = msg.id,
-                            onEditMessage = { messageId, newText ->
-                                viewModel.editMessage(messageId, newText, userId)
+                            images = msg.images,
+                            onEditMessage = { messageId, newText, images ->
+                                // Convert the ImageData of this message to Bitmaps before sending to ViewModel
+                                val bitmaps = images.map { imageData ->
+                                    val decodedBytes = Base64.decode(imageData.base64, Base64.DEFAULT)
+                                    BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+                                }
+
+                                viewModel.editMessage(messageId, newText, bitmaps)
                             },
                             onDeleteMessage = { messageId ->
-                                viewModel.deleteMessage(messageId, userId)
+                                viewModel.deleteMessage(messageId)
                             },
-                            onEditMessageFromDropdown = { messageId ->
+                            onEditMessageFromDropdown = { messageId, images ->
                                 // Find the message and set up editing mode
                                 val messageToEdit = messages.find { it.id == messageId }
                                 if (messageToEdit != null) {
                                     viewModel.messageInput.value = messageToEdit.content
+
                                     editingMessageId = messageId
                                     isEditingMode = true
+                                    val bitmaps = images.map { imageData ->
+                                        val decodedBytes = Base64.decode(imageData.base64, Base64.DEFAULT)
+                                        BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+                                    }
+                                    // Store this message's images so they appear in edit mode
+                                    editingMessageImages = bitmaps
+                                    selectedImageBitmaps.clear()
+                                    selectedImageBitmaps.addAll(bitmaps)
+                                    showImagePreview = selectedImageBitmaps.isNotEmpty()
                                 }
                             }
                         )
@@ -643,78 +651,185 @@ fun ChatPage(
                         ChatBubbleLeft(
                             text = msg.content,
                             messageId = msg.id,
-                            onEditMessage = { messageId, newText ->
-                                viewModel.editMessage(messageId, newText, userId)
+                            images = msg.images,
+                            onEditMessage = { messageId, newText, bitmaps ->
+                                viewModel.editMessage(messageId, newText, bitmaps)
                             },
                             onDeleteMessage = { messageId ->
-                                viewModel.deleteMessage(messageId, userId)
+                                viewModel.deleteMessage(messageId)
                             }
                         )
                     }
                 }
             }
 
-            // Input Bar
+            // Input Bar (Dynamic Height Container - expands to contain images)
+            val inputBarHeight = if (showImagePreview && selectedImageBitmaps.isNotEmpty()) {
+                200.dp// 1fwef + 60dp
+            } else {
+                110.dp
+            }
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(110.dp)
+                    .height(inputBarHeight)
                     .padding(8.dp)
             ) {
-                // Background image
+                // Background image (expanding container)
                 Image(
                     painter = painterResource(id = R.drawable.container),
                     contentDescription = null,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxSize(),           // ✔️ expands with parent
+                    contentScale = ContentScale.FillBounds
                 )
 
-                // Foreground content: text field + send button
-                Row(
+                // Foreground content: image preview + input controls
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(horizontal = 8.dp)
                 ) {
-                    TextField(
-                        value = messageInput,
-                        onValueChange = { newValue ->
-                            viewModel.messageInput.value = newValue
-                            // Reset edit mode if text field is cleared
-                            if (newValue.isEmpty() && isEditingMode) {
-                                editingMessageId = null
-                                isEditingMode = false
-                            }
-                        },
-                        placeholder = { 
-                            Text(
-                                if (isEditingMode) "Edit your message..." else "Type your message…", 
-                                style = TextStyle(fontFamily = PressStart)
-                            ) 
-                        },
-                        textStyle = TextStyle(
-                            color = if (isEditingMode) Color(0xFFFF6600) else Color.Black
-                        ),
-                        modifier = Modifier.weight(1f).background(color = Color.White)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(
-                        painter = painterResource(id = R.drawable.send),
-                        contentDescription = if (isEditingMode) "Update" else "Send",
-                        modifier = Modifier.size(36.dp).clickable {
-                            if (isEditingMode && editingMessageId != null) {
-                                // Update the existing message
-                                val messageId = editingMessageId ?: return@clickable
-                                viewModel.editMessage(messageId, messageInput, userId)
-                                // Reset editing mode
-                                editingMessageId = null
-                                isEditingMode = false
-                                viewModel.messageInput.value = ""
-                            } else {
-                                // Send new message
-                                viewModel.sendMessage(userId)
+                    Column(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        // Image Preview (top section, only when images exist)
+                        if (showImagePreview && selectedImageBitmaps.isNotEmpty()) {
+                            Box(
+                                modifier = Modifier
+                                    .height(60.dp)
+                                    .padding(top = 12.dp)
+                                    .fillMaxWidth()
+                            ) {
+                                LazyRow(
+                                    modifier = Modifier.fillMaxSize(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    items(selectedImageBitmaps.size) { index ->
+                                        Row(
+                                            modifier = Modifier
+                                                .padding(end = 8.dp)
+                                                .height(60.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            // Image preview
+                                            Image(
+                                                bitmap = selectedImageBitmaps[index].asImageBitmap(),
+                                                contentDescription = "Selected image preview $index",
+                                                modifier = Modifier
+                                                    .height(60.dp)
+                                                    .width(60.dp)
+                                                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
+                                                    .background(Color.LightGray)
+                                                    .padding(end = 8.dp),
+                                                contentScale = ContentScale.Crop
+                                            )
+                                            
+                                            // Remove image button
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.x_icon),
+                                                contentDescription = "Remove image",
+                                                tint = Color.Red,
+                                                modifier = Modifier
+                                                    .size(20.dp)
+                                                    .clickable {
+                                                        selectedImageUris.removeAt(index)
+                                                        selectedImageBitmaps.removeAt(index)
+                                                        showImagePreview = selectedImageBitmaps.isNotEmpty()
+                                                    }
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
-                    )
+
+                        // Input controls (bottom section, always present)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Add Image Button
+                            Icon(
+                                painter = painterResource(id = R.drawable.add_image_button),
+                                contentDescription = "Add image",
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .padding(end = 8.dp)
+                                    .clickable {
+                                        imagePickerLauncher.launch("image/*")
+                                    }
+                            )
+                            
+                            // Text field
+                            TextField(
+                                value = messageInput,
+                                onValueChange = { newValue ->
+                                    viewModel.messageInput.value = newValue
+                                    // Reset edit mode if text field is cleared
+                                    if (newValue.isEmpty() && isEditingMode) {
+                                        editingMessageId = null
+                                        isEditingMode = false
+                                    }
+                                },
+                                placeholder = { 
+                                    Text(
+                                        if (isEditingMode) "Edit your message..." else "Type your message…", 
+                                        style = TextStyle(fontFamily = PressStart)
+                                    ) 
+                                },
+                                textStyle = TextStyle(
+                                    color = if (isEditingMode) Color(0xFFFF6600) else Color.Black
+                                ),
+                                modifier = Modifier.weight(1f).background(color = Color.White)
+                            )
+                            
+                            Spacer(modifier = Modifier.width(8.dp))
+                            
+                            // Send button
+                            Icon(
+                                painter = painterResource(id = R.drawable.send),
+                                contentDescription = if (isEditingMode) "Update" else "Send",
+                                modifier = Modifier.size(36.dp).clickable {
+                                    if (isEditingMode && editingMessageId != null) {
+                                        // Update the existing message with images
+                                        val messageId = editingMessageId ?: return@clickable
+                                        val bitmaps = if (selectedImageBitmaps.isNotEmpty()) {
+                                            selectedImageBitmaps.toList() as List<Bitmap>
+                                        } else {
+                                            editingMessageImages // Use original images if none selected
+                                        }
+                                        viewModel.editMessage(messageId, messageInput, bitmaps)
+                                        // Reset editing mode
+                                        editingMessageId = null
+                                        isEditingMode = false
+                                        viewModel.messageInput.value = ""
+                                        // Clear images after editing
+                                        selectedImageUris.clear()
+                                        selectedImageBitmaps.clear()
+                                        showImagePreview = false
+                                    } else {
+                                        // Send new message with images
+                                        val bitmaps = if (selectedImageBitmaps.isNotEmpty()) {
+                                            selectedImageBitmaps.toList() as List<Bitmap>
+                                        } else {
+                                            emptyList()
+                                        }
+                                        viewModel.sendMessageWithImages(messageInput, bitmaps)
+                                        
+                                        // Clear images after sending
+                                        selectedImageUris.clear()
+                                        selectedImageBitmaps.clear()
+                                        showImagePreview = false
+                                        viewModel.messageInput.value = ""
+                                    }
+                                }
+                            )
+                        }
+                    }
                 }
             }
 
@@ -732,8 +847,7 @@ fun PreviewChatPageWithDrawer() {
     val mockViewModel = AiConversationViewModel()
     MyApplicationTheme {
         ChatPage(
-            viewModel = mockViewModel,
-            userId = "user123"
+            viewModel = mockViewModel
         )
     }
 }

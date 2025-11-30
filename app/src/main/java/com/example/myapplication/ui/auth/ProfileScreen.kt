@@ -19,58 +19,7 @@ import androidx.compose.ui.unit.sp
 import com.example.myapplication.DTOs.Profile
 import com.example.myapplication.R
 import com.example.myapplication.ui.theme.MyApplicationTheme
-
-/**
- * Simplified Profile screen showing only the header
- */
-@Composable
-fun ProfileScreen(
-    onEditProfile: () -> Unit = {},
-    onBack: () -> Unit = {},
-    onLogout: () -> Boolean
-) {
-    val vm: ProfileViewModel = remember { ProfileViewModel() }
-    
-    // Observe profile data and UI state
-    val profile = vm.profile
-    val isLoading = vm.isLoading
-    val error = vm.error
-    
-    // Load profile when screen is created
-    LaunchedEffect(Unit) {
-        vm.loadProfile()
-    }
-    
-    MyApplicationTheme {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White)
-        ) {
-                when {
-                    isLoading -> {
-                        ProfileLoadingState()
-                    }
-                    error != null -> {
-                        ProfileErrorState(errorMessage = error.toString())
-                    }
-                    profile != null -> {
-                        ProfileHeader(
-                            profile = profile,
-                            onEditProfile = onEditProfile,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 40.dp)
-                        )
-                    }
-                    else -> {
-                        ProfileEmptyState()
-                    }
-                }
-            }
-        }
-    }
-
+import com.example.myapplication.ui.auth.ProfileViewModel
 
 /**
  * Loading state composable
@@ -244,6 +193,88 @@ fun ProfileHeader(
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp)
                 )
+            }
+        }
+    }
+}
+
+/**
+ * Simplified Profile screen showing only the header
+ */
+@Composable
+fun ProfileScreen(
+    onEditProfile: () -> Unit = {},
+    onBack: () -> Unit = {},
+    onLogout: () -> Unit = {}
+) {
+    val vm: ProfileViewModel = remember { ProfileViewModel() }
+
+    // Observe profile data and UI state
+    val profile = vm.profile
+    val isLoading = vm.isLoading
+    val error = vm.error
+
+    // Load profile when screen is created
+    LaunchedEffect(Unit) {
+        vm.loadProfile()
+    }
+
+    MyApplicationTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                // Profile header section
+                when {
+                    isLoading -> {
+                        ProfileLoadingState()
+                    }
+                    error != null -> {
+                        ProfileErrorState(errorMessage = error.toString())
+                    }
+                    profile != null -> {
+                        ProfileHeader(
+                            profile = profile,
+                            onEditProfile = onEditProfile,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 40.dp)
+                        )
+                    }
+                    else -> {
+                        ProfileEmptyState()
+                    }
+                }
+
+                // Logout button at the bottom
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .weight(1f),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    Button(
+                        onClick = onLogout,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
+                        )
+                    ) {
+                        Text(
+                            text = "Logout",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
         }
     }

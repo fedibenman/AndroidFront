@@ -1,6 +1,7 @@
 package com.example.myapplication.ui.auth
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.CircularProgressIndicator
@@ -18,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.R
+import com.example.myapplication.ui.theme.LocalThemeManager
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.example.myapplication.ui.theme.PressStart
 
@@ -31,17 +33,32 @@ fun SignupScreen(
     var name by viewModel::name
     var email by viewModel::email
     var password by viewModel::password
+    
+    val themeManager = LocalThemeManager.current
+    val isDarkMode = themeManager.isDarkMode
 
     Box(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.background_general),
-            contentDescription = "Background",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.matchParentSize()
-        )
+        // Background based on theme
+        if (isDarkMode) {
+            // Dark theme background using background_dark image
+            Image(
+                painter = painterResource(id = R.drawable.background_dark),
+                contentDescription = "Dark Background",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.matchParentSize()
+            )
+        } else {
+            // Light theme background
+            Image(
+                painter = painterResource(id = R.drawable.background_general),
+                contentDescription = "Background",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.matchParentSize()
+            )
+        }
 
         Column(
             modifier = Modifier
@@ -58,18 +75,18 @@ fun SignupScreen(
                     fontFamily = PressStart,
                     fontWeight = FontWeight.Normal,
                     fontSize = 22.sp,
-                    color = Color.Black
+                    color = if (isDarkMode) Color.White else Color.Black
                 ),
                 modifier = Modifier.padding(bottom = 4.dp)
             )
 
             // Subtitle
             Text(
-                text = "join the adventure",
+                text = "join the adventurers",
                 style = TextStyle(
                     fontFamily = PressStart,
                     fontWeight = FontWeight.Normal,
-                    color = Color.Black
+                    color = if (isDarkMode) Color.Gray else Color.Black
                 ),
                 modifier = Modifier.padding(bottom = 24.dp)
             )
@@ -80,7 +97,7 @@ fun SignupScreen(
                 style = TextStyle(
                     fontFamily = PressStart,
                     fontWeight = FontWeight.Normal,
-                    color = Color.Black
+                    color = if (isDarkMode) Color.White else Color.Black
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -117,7 +134,7 @@ fun SignupScreen(
                             Text(
                                 text = "Enter your name",
                                 style = TextStyle(
-                                color = Color.DarkGray,
+                                color = if (isDarkMode) Color.Gray else Color.DarkGray,
                                 fontFamily = PressStart,
                                 fontWeight = FontWeight.Normal
                                 )
@@ -148,7 +165,7 @@ fun SignupScreen(
                 style = TextStyle(
                     fontFamily = PressStart,
                     fontWeight = FontWeight.Normal,
-                    color = Color.Black
+                    color = if (isDarkMode) Color.White else Color.Black
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -185,7 +202,7 @@ fun SignupScreen(
                             Text(
                                 text = "Enter your email",
                                 style = TextStyle(
-                                color = Color.DarkGray,
+                                color = if (isDarkMode) Color.Gray else Color.DarkGray,
                                 fontFamily = PressStart,
                                 fontWeight = FontWeight.Normal
                                 )
@@ -215,7 +232,7 @@ fun SignupScreen(
                 style = TextStyle(
                     fontFamily = PressStart,
                     fontWeight = FontWeight.Normal,
-                    color = Color.Black
+                    color = if (isDarkMode) Color.White else Color.Black
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -239,7 +256,7 @@ fun SignupScreen(
                 style = TextStyle(
                     fontFamily = PressStart,
                     fontWeight = FontWeight.Normal,
-                    color = Color.Black
+                    color = if (isDarkMode) Color.White else Color.Black
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -322,10 +339,10 @@ fun SignupScreen(
                     style = TextStyle(
                         fontFamily = PressStart,
                         fontWeight = FontWeight.Normal,
-                        color = Color.Black
+                        color = if (isDarkMode) Color.White else Color.Black
                     )
                 )
-        }
+            }
     }
 }
 }
@@ -335,11 +352,21 @@ fun SignupScreen(
 @Preview(showBackground = true)
 @Composable
 fun SignUpScreenPreview() {
-    MyApplicationTheme {
-        SignupScreen(
-            viewModel = AuthViewModel(),
-            onBack = {},
-            onSignupSuccess = {}
-        )
+    // Mock ThemeManager for preview
+    val mockThemeManager = object {
+        val isDarkMode = false
+        fun toggleTheme() {}
+    }
+    
+    androidx.compose.runtime.CompositionLocalProvider(
+        LocalThemeManager provides mockThemeManager as com.example.myapplication.ui.theme.ThemeManager
+    ) {
+        MyApplicationTheme {
+            SignupScreen(
+                viewModel = AuthViewModel(),
+                onBack = {},
+                onSignupSuccess = {}
+            )
+        }
     }
 }
