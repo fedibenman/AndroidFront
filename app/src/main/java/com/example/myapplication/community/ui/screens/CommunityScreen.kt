@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Message
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -60,9 +61,12 @@ fun CommunityScreen(
     onCreatePost: () -> Unit,
     onEditPost: (Post) -> Unit,
     onDeletePost: (Post) -> Unit,
-    onNavigateToChat: () -> Unit = {}
+    onNavigateToChat: () -> Unit = {},
+    onNavigateToNotifications: () -> Unit = {}
 ) {
     val posts by postViewModel.posts.collectAsState()
+    val notifications by postViewModel.notifications.collectAsState()
+    val unreadCount = notifications.count { !it.read }
 
     Box(
         modifier = modifier
@@ -92,8 +96,7 @@ fun CommunityScreen(
                     .padding(bottom = 12.dp)
                     .border(4.dp, PixelBlack)
                     .background(PixelBlue)
-                    .padding(12.dp),
-                contentAlignment = Alignment.Center
+                    .padding(12.dp)
             ) {
                 Text(
                     text = "COMMUNITY",
@@ -101,8 +104,31 @@ fun CommunityScreen(
                     fontWeight = FontWeight.Black,
                     fontSize = 24.sp,
                     color = PixelWhite,
-                    letterSpacing = 4.sp
+                    letterSpacing = 4.sp,
+                    modifier = Modifier.align(Alignment.Center)
                 )
+
+                // Bell Icon
+                IconButton(
+                    onClick = onNavigateToNotifications,
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                ) {
+                    Box {
+                        Icon(
+                            androidx.compose.material.icons.Icons.Default.Notifications,
+                            contentDescription = "Notifications",
+                            tint = PixelWhite
+                        )
+                        if (unreadCount > 0) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .size(10.dp)
+                                    .background(PixelRed, androidx.compose.foundation.shape.CircleShape)
+                            )
+                        }
+                    }
+                }
             }
 
             // LISTE DES POSTS
@@ -280,7 +306,7 @@ fun PostItem(
                     IconButton(onClick = onLike) {
                         Icon(Icons.Default.FavoriteBorder, contentDescription = "Like", tint = PixelRed)
                     }
-                    Text("${post.likes}", fontFamily = PressStart, fontWeight = FontWeight.Bold)
+                    Text("${post.likes?.size ?: 0}", fontFamily = PressStart, fontWeight = FontWeight.Bold)
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {

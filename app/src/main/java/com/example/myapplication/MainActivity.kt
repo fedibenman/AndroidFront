@@ -146,9 +146,16 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                         onCreatePost = { navController.navigate("create_post") },
                         onEditPost = { post -> navController.navigate("edit_post/${post._id}") },
                         onDeletePost = { post -> post._id?.let { postViewModel.deletePost(it) {} } },
-                        onNavigateToChat = { navController.navigate("chat_rooms") }
+                        onNavigateToChat = { navController.navigate("chat_rooms") },
+                        onNavigateToNotifications = { navController.navigate("notifications") }
                     )
                 }
+            )
+        }
+        composable("notifications") {
+            com.example.myapplication.community.ui.screens.NotificationScreen(
+                postViewModel = postViewModel,
+                onBack = { navController.popBackStack() }
             )
         }
         composable("create_post") {

@@ -9,5 +9,7 @@ data class ChatMessage(
     val createdAt: String?,
     val audioUrl: String? = null,
     val transcription: String? = null,
-    val duration: String? = null
+    val duration: String? = null,
+    val reactions: List<Reaction>? = null,
+    val replyTo: ReplyInfo? = null
 )

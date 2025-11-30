@@ -6,13 +6,17 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Pause
@@ -20,23 +24,26 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.chat.model.ChatMessage
 import com.example.myapplication.chat.viewmodel.ChatViewModel
-import com.example.myapplication.ui.theme.PixelBlack
-import com.example.myapplication.ui.theme.PixelBlue
-import com.example.myapplication.ui.theme.PixelGray
-import com.example.myapplication.ui.theme.PixelGreen
-import com.example.myapplication.ui.theme.PixelWhite
-import com.example.myapplication.ui.theme.PressStart
+import com.example.myapplication.ui.theme.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
+
+/* -------------------------------------------------------------
+   CHAT SCREEN
+------------------------------------------------------------- */
 
 @Composable
 fun ChatScreen(
@@ -47,17 +54,21 @@ fun ChatScreen(
     val messages by viewModel.messages.collectAsState()
     val typingUsers by viewModel.typingUsers.collectAsState()
     val isRecording by viewModel.isRecording.collectAsState()
+    val replyingTo by viewModel.replyingToMessage.collectAsState()
 
     var messageText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
+
     val context = LocalContext.current
-    val permissionLauncher = rememberLauncherForActivityResult(
-        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            viewModel.startRecording()
+
+    val permissionLauncher =
+        rememberLauncherForActivityResult(
+            androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+        ) { granted ->
+            if (granted) {
+                viewModel.startRecording()
+            }
         }
-    }
 
     val recordingDuration by viewModel.recordingDuration.collectAsState()
     val recordedAudioFile by viewModel.recordedAudioFile.collectAsState()
@@ -69,7 +80,7 @@ fun ChatScreen(
             .padding(8.dp)
     ) {
 
-        // HEADER
+        /* ---------- HEADER ---------- */
         Text(
             text = currentRoom?.name ?: "Room",
             modifier = Modifier.fillMaxWidth(),
@@ -81,17 +92,18 @@ fun ChatScreen(
 
         Spacer(Modifier.height(8.dp))
 
-        // MESSAGES LIST
+        /* ---------- MESSAGES LIST ---------- */
         LazyColumn(
             modifier = Modifier.weight(1f),
             state = listState
         ) {
             items(messages) { msg ->
-                MessageItem(msg)
+                MessageItem(message = msg, viewModel = viewModel)
                 Spacer(Modifier.height(6.dp))
             }
         }
 
+        /* ---------- TYPING ---------- */
         if (typingUsers.isNotEmpty()) {
             Text(
                 text = "${typingUsers.joinToString()} typing...",
@@ -104,7 +116,41 @@ fun ChatScreen(
 
         Spacer(Modifier.height(8.dp))
 
-        // INPUT BAR
+        /* ---------- REPLYING UI ---------- */
+        replyingTo?.let { reply ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(PixelGray.copy(alpha = 0.2f))
+                    .border(1.dp, PixelBlack)
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        "Replying to ${reply.senderName}",
+                        fontFamily = PressStart,
+                        fontSize = 10.sp,
+                        color = PixelBlue
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        if (reply.audioUrl != null) "Voice Message" else reply.content,
+                        fontFamily = PressStart,
+                        fontSize = 10.sp,
+                        color = PixelBlack,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                IconButton(onClick = { viewModel.cancelReply() }) {
+                    Icon(Icons.Default.Close, contentDescription = null, tint = PixelBlack)
+                }
+            }
+            Spacer(Modifier.height(4.dp))
+        }
+
+        /* ---------- INPUT BAR ---------- */
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -113,20 +159,20 @@ fun ChatScreen(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+
+            /* ---- Record button ---- */
             IconButton(
                 onClick = {
                     if (isRecording) {
                         viewModel.stopRecording()
                     } else {
-                        if (androidx.core.content.ContextCompat.checkSelfPermission(
-                                context,
-                                android.Manifest.permission.RECORD_AUDIO
-                            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-                        ) {
-                            viewModel.startRecording()
-                        } else {
-                            permissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
-                        }
+                        val perm = android.Manifest.permission.RECORD_AUDIO
+                        val granted = androidx.core.content.ContextCompat.checkSelfPermission(
+                            context, perm
+                        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+                        if (granted) viewModel.startRecording()
+                        else permissionLauncher.launch(perm)
                     }
                 },
                 modifier = Modifier
@@ -139,15 +185,15 @@ fun ChatScreen(
             ) {
                 Icon(
                     if (isRecording) Icons.Default.Stop else Icons.Default.Mic,
-                    contentDescription = "Record",
+                    contentDescription = null,
                     tint = PixelBlack
                 )
             }
 
             Spacer(Modifier.width(8.dp))
 
+            /* ---- Recording Timer OR Text Input ---- */
             if (isRecording) {
-                // RECORDING TIMER UI
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -157,23 +203,20 @@ fun ChatScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Recording... $recordingDuration",
+                        "Recording... $recordingDuration",
                         fontFamily = PressStart,
                         fontSize = 12.sp,
                         color = Color.Red
                     )
                 }
             } else {
-                // TEXT INPUT
                 OutlinedTextField(
                     value = messageText,
                     onValueChange = {
                         val wasEmpty = messageText.isEmpty()
                         messageText = it
-                        val isEmpty = it.isEmpty()
-
-                        if (wasEmpty && !isEmpty) viewModel.onTyping(true)
-                        else if (!wasEmpty && isEmpty) viewModel.onTyping(false)
+                        if (wasEmpty && it.isNotEmpty()) viewModel.onTyping(true)
+                        else if (it.isEmpty()) viewModel.onTyping(false)
                     },
                     modifier = Modifier.weight(1f),
                     placeholder = {
@@ -193,74 +236,109 @@ fun ChatScreen(
 
             Spacer(Modifier.width(8.dp))
 
-            if (recordedAudioFile != null) {
-                // PREVIEW MODE: Show Delete and Send buttons
-                IconButton(
-                    onClick = { viewModel.discardAudio() },
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(Color.Red.copy(alpha = 0.8f), RoundedCornerShape(6.dp))
-                        .border(2.dp, PixelBlack, RoundedCornerShape(6.dp))
-                ) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = "Delete",
-                        tint = PixelBlack
-                    )
+            /* ---- SEND / DELETE ---- */
+            when {
+                recordedAudioFile != null -> {
+                    IconButton(
+                        onClick = { viewModel.discardAudio() },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(Color.Red.copy(alpha = 0.8f), RoundedCornerShape(6.dp))
+                            .border(2.dp, PixelBlack, RoundedCornerShape(6.dp))
+                    ) {
+                        Icon(Icons.Default.Delete, contentDescription = null, tint = PixelBlack)
+                    }
+
+                    Spacer(Modifier.width(8.dp))
+
+                    IconButton(
+                        onClick = { viewModel.sendAudio() },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(PixelGreen, RoundedCornerShape(6.dp))
+                            .border(2.dp, PixelBlack, RoundedCornerShape(6.dp))
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, tint = PixelBlack)
+                    }
                 }
-                
-                Spacer(Modifier.width(8.dp))
-                
-                IconButton(
-                    onClick = { viewModel.sendAudio() },
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(PixelGreen, RoundedCornerShape(6.dp))
-                        .border(2.dp, PixelBlack, RoundedCornerShape(6.dp))
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.Send,
-                        contentDescription = "Send",
-                        tint = PixelBlack
-                    )
-                }
-            } else if (!isRecording) {
-                // NORMAL MODE: Show Send button for text
-                IconButton(
-                    onClick = {
-                        if (messageText.isNotBlank()) {
-                            viewModel.sendMessage(messageText)
-                            messageText = ""
-                        }
-                    },
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(PixelGreen, RoundedCornerShape(6.dp))
-                        .border(2.dp, PixelBlack, RoundedCornerShape(6.dp))
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.Send,
-                        contentDescription = "Send",
-                        tint = PixelBlack
-                    )
+
+                !isRecording -> {
+                    IconButton(
+                        onClick = {
+                            if (messageText.isNotBlank()) {
+                                viewModel.sendMessage(messageText)
+                                messageText = ""
+                            }
+                        },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(PixelGreen, RoundedCornerShape(6.dp))
+                            .border(2.dp, PixelBlack, RoundedCornerShape(6.dp))
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, tint = PixelBlack)
+                    }
                 }
             }
         }
     }
 }
 
+
+/* -------------------------------------------------------------
+   MESSAGE ITEM
+------------------------------------------------------------- */
+
 @Composable
-fun MessageItem(message: ChatMessage) {
+fun MessageItem(message: ChatMessage, viewModel: ChatViewModel) {
+    var showReactionPicker by remember { mutableStateOf(false) }
+    val currentUserId by viewModel.currentUserIdFlow.collectAsState(initial = null)
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = {},
+                onLongClick = { showReactionPicker = true }
+            ),
         colors = CardDefaults.cardColors(containerColor = PixelWhite),
         border = BorderStroke(2.dp, PixelBlack),
         shape = RoundedCornerShape(0.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
 
+            /* ---------- QUOTED MESSAGE ---------- */
+            message.replyTo?.let { reply ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
+                        .background(Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
+                        .border(1.dp, PixelGray, RoundedCornerShape(4.dp))
+                        .padding(8.dp)
+                ) {
+                    Column {
+                        Text(
+                            reply.senderName,
+                            fontFamily = PressStart,
+                            fontSize = 10.sp,
+                            color = PixelBlue
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            reply.content,
+                            fontFamily = PressStart,
+                            fontSize = 10.sp,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            color = PixelBlack
+                        )
+                    }
+                }
+            }
+
+            /* ---------- NAME ---------- */
             Text(
-                text = message.senderName,
+                message.senderName,
                 fontFamily = PressStart,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
@@ -269,14 +347,13 @@ fun MessageItem(message: ChatMessage) {
 
             Spacer(Modifier.height(4.dp))
 
+            /* ---------- AUDIO OR TEXT ---------- */
             if (message.audioUrl != null) {
-                // AUDIO MESSAGE
                 Spacer(Modifier.height(8.dp))
                 AudioPlayer(message.audioUrl, message.duration)
             } else {
-                // TEXT MESSAGE
                 Text(
-                    text = message.content,
+                    message.content,
                     fontFamily = PressStart,
                     fontSize = 14.sp,
                     color = PixelBlack,
@@ -284,10 +361,9 @@ fun MessageItem(message: ChatMessage) {
                 )
             }
 
-            // TRANSCRIPTION (Optional)
+            /* ---------- TRANSCRIPTION ---------- */
             message.transcription?.let { transcription ->
                 if (transcription != "Transcription disabled") {
-                    Spacer(Modifier.height(4.dp))
                     var show by remember { mutableStateOf(false) }
 
                     TextButton(onClick = { show = !show }) {
@@ -312,13 +388,137 @@ fun MessageItem(message: ChatMessage) {
                     }
                 }
             }
+
+            /* ---------- REACTIONS ---------- */
+            if (!message.reactions.isNullOrEmpty()) {
+                Spacer(Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    val grouped = message.reactions.groupBy { it.emoji }
+
+                    grouped.forEach { (emoji, list) ->
+                        val reacted = currentUserId != null &&
+                                list.any { it.userId == currentUserId }
+
+                        Button(
+                            onClick = {
+                                message._id?.let { id ->
+                                    if (reacted) viewModel.removeReaction(id, emoji)
+                                    else viewModel.addReaction(id, emoji)
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (reacted) PixelGreen.copy(alpha = 0.3f)
+                                else PixelGray.copy(alpha = 0.2f)
+                            ),
+                            modifier = Modifier
+                                .height(32.dp)
+                                .border(1.dp, PixelBlack, RoundedCornerShape(16.dp)),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                "$emoji ${list.size}",
+                                fontFamily = PressStart,
+                                fontSize = 10.sp,
+                                color = PixelBlack
+                            )
+                        }
+                    }
+                }
+            }
         }
+    }
+
+    /* ---------- REACTION PICKER ---------- */
+    if (showReactionPicker) {
+        AlertDialog(
+            onDismissRequest = { showReactionPicker = false },
+            containerColor = PixelWhite,
+            title = {
+                Text(
+                    "Add Reaction",
+                    fontFamily = PressStart,
+                    fontSize = 12.sp,
+                    color = PixelBlack,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        listOf("❤️", "👍", "😂", "🔥", "😮")
+                            .forEach { emoji ->
+                                Box(
+                                    modifier = Modifier
+                                        .size(56.dp)
+                                        .background(PixelGray.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                                        .border(2.dp, PixelBlack, RoundedCornerShape(8.dp))
+                                        .clickable {
+                                            message._id?.let { id ->
+                                                viewModel.addReaction(id, emoji)
+                                            }
+                                            showReactionPicker = false
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(emoji, fontSize = 32.sp)
+                                }
+                            }
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
+                    Button(
+                        onClick = {
+                            viewModel.startReplying(message)
+                            showReactionPicker = false
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = PixelBlue),
+                        shape = RoundedCornerShape(4.dp),
+                        modifier = Modifier.border(2.dp, PixelBlack, RoundedCornerShape(4.dp))
+                    ) {
+                        Text("Reply", fontFamily = PressStart, fontSize = 12.sp, color = PixelWhite)
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(
+                    onClick = { showReactionPicker = false },
+                    modifier = Modifier
+                        .border(2.dp, PixelBlack, RoundedCornerShape(4.dp))
+                        .background(PixelGray.copy(alpha = 0.2f), RoundedCornerShape(4.dp))
+                ) {
+                    Text("Cancel", fontFamily = PressStart, fontSize = 10.sp, color = PixelBlack)
+                }
+            },
+            shape = RoundedCornerShape(0.dp),
+            tonalElevation = 0.dp
+        )
     }
 }
 
+
+/* -------------------------------------------------------------
+   AUDIO PLAYER
+------------------------------------------------------------- */
+
 @Composable
 fun AudioPlayer(url: String, messageDuration: String? = null) {
+
     val context = LocalContext.current
+
     var isPlaying by remember { mutableStateOf(false) }
     var currentPosition by remember { mutableFloatStateOf(0f) }
     var duration by remember { mutableFloatStateOf(0f) }
@@ -335,14 +535,17 @@ fun AudioPlayer(url: String, messageDuration: String? = null) {
             )
             mediaPlayer.setDataSource(url)
             mediaPlayer.prepareAsync()
+
             mediaPlayer.setOnPreparedListener { mp ->
                 duration = mp.duration.toFloat()
-                mp.setVolume(1.0f, 1.0f)
+                mp.setVolume(1f, 1f)
             }
-            mediaPlayer.setOnCompletionListener { 
-                isPlaying = false 
+
+            mediaPlayer.setOnCompletionListener {
+                isPlaying = false
                 currentPosition = 0f
             }
+
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -355,7 +558,7 @@ fun AudioPlayer(url: String, messageDuration: String? = null) {
     LaunchedEffect(isPlaying) {
         while (isPlaying) {
             currentPosition = mediaPlayer.currentPosition.toFloat()
-            kotlinx.coroutines.delay(100)
+            delay(100)
         }
     }
 
@@ -367,6 +570,8 @@ fun AudioPlayer(url: String, messageDuration: String? = null) {
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+
+        /* ---------- Play / Pause ---------- */
         IconButton(
             onClick = {
                 if (isPlaying) {
@@ -379,21 +584,22 @@ fun AudioPlayer(url: String, messageDuration: String? = null) {
             },
             modifier = Modifier
                 .size(40.dp)
-                .background(PixelGreen, androidx.compose.foundation.shape.CircleShape)
-                .border(2.dp, PixelBlack, androidx.compose.foundation.shape.CircleShape)
+                .background(PixelGreen, CircleShape)
+                .border(2.dp, PixelBlack, CircleShape)
         ) {
             Icon(
                 if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                contentDescription = "Play/Pause",
+                contentDescription = null,
                 tint = PixelBlack
             )
         }
-        
+
         Spacer(Modifier.width(8.dp))
-        
+
+        /* ---------- Slider ---------- */
         Slider(
             value = currentPosition,
-            onValueChange = { 
+            onValueChange = {
                 currentPosition = it
                 mediaPlayer.seekTo(it.toInt())
             },
@@ -405,15 +611,16 @@ fun AudioPlayer(url: String, messageDuration: String? = null) {
                 inactiveTrackColor = PixelGray
             )
         )
-        
+
         Spacer(Modifier.width(8.dp))
-        
-        // Display countdown: total duration - current position
+
+        /* ---------- Remaining time ---------- */
         val remainingMs = if (duration > 0) duration - currentPosition else 0f
         val minutes = (remainingMs / 1000 / 60).toInt()
         val seconds = (remainingMs / 1000 % 60).toInt()
+
         Text(
-            text = String.format("%02d:%02d", minutes, seconds),
+            text = "%02d:%02d".format(minutes, seconds),
             fontFamily = PressStart,
             fontSize = 10.sp,
             color = PixelBlack

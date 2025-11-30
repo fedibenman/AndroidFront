@@ -26,6 +26,9 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     private val tokenManager = TokenDataStoreManager(context)
     private val authRepository = KtorAuthRepository()
 
+    private val notificationRepository = com.example.myapplication.community.repository.NotificationRepository()
+    val notifications = notificationRepository.notifications
+
     private val _posts = MutableStateFlow<List<Post>>(emptyList())
     val posts: StateFlow<List<Post>> = _posts.asStateFlow()
 
@@ -36,6 +39,17 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         loadPosts()
+        initNotifications()
+    }
+
+    private fun initNotifications() {
+        viewModelScope.launch {
+            val userId = getCurrentUserId()
+            if (userId != null) {
+                notificationRepository.connect(userId)
+                notificationRepository.loadNotifications(userId)
+            }
+        }
     }
 
     // -------------------------------
@@ -78,12 +92,23 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
 
             // Optimistic UI update
-            _posts.value = _posts.value.map {
-                if (it._id == postId) it.copy(likes = it.likes + 1) else it
+            _posts.value = _posts.value.map { post ->
+                if (post._id == postId) {
+                    val currentUserId = getCurrentUserId() ?: fallbackUserId
+                    val currentLikes = post.likes?.toMutableList() ?: mutableListOf()
+                    if (currentLikes.contains(currentUserId)) {
+                        currentLikes.remove(currentUserId)
+                    } else {
+                        currentLikes.add(currentUserId)
+                    }
+                    post.copy(likes = currentLikes)
+                } else post
             }
 
             try {
-                api.likePost(postId)
+                val userId = getCurrentUserId() ?: fallbackUserId
+                val body = mapOf("userId" to userId)
+                api.likePost(postId, body)
             } catch (e: Exception) {
                 Log.e("PostViewModel", "Error liking post", e)
             }
@@ -245,6 +270,17 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     // -------------------------------
     // Clear error
     // -------------------------------
+    fun markNotificationAsRead(notificationId: String) {
+        viewModelScope.launch {
+            notificationRepository.markAsRead(notificationId)
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        notificationRepository.disconnect()
+    }
+    
     fun clearError() {
         _errorMessage.value = null
     }
