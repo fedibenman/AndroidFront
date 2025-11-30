@@ -46,6 +46,8 @@ android {
 dependencies {
     implementation("androidx.room:room-ktx:2.6.1")
     implementation("androidx.room:room-runtime:2.8.2")
+    implementation(libs.firebase.crashlytics.buildtools)
+    implementation(libs.androidx.compose.foundation)
     ksp("androidx.room:room-compiler:2.8.2")
 
     implementation(libs.androidx.core.ktx)
@@ -76,4 +78,10 @@ dependencies {
     implementation("androidx.core:core-splashscreen:1.0.1")
 
     implementation("com.google.android.material:material:1.11.0")
+
+    // Community Feature Dependencies
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation("io.socket:socket.io-client:2.1.0")
 }

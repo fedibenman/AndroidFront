@@ -30,6 +30,11 @@ fun MainBottomNavigationBar(
             route = "image_analysis", 
             icon = R.drawable.image_container,
             label = "Analysis"
+              ),
+  BottomNavigationItem(
+            route = "community",
+            icon = R.drawable.globe,
+            label = "Community"
         ),
         BottomNavigationItem(
             route = "profile", 
