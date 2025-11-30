@@ -5,13 +5,17 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavHostController
@@ -22,12 +26,16 @@ import com.example.myapplication.ui.auth.ChatPage
 import com.example.myapplication.ui.auth.LoginScreen
 import com.example.myapplication.ui.auth.SignupScreen
 import com.example.myapplication.ui.auth.AuthViewModel
+import com.example.myapplication.ui.auth.TokenAuthManager
 import com.example.myapplication.ui.auth.RequestResetCodeScreen
 import com.example.myapplication.ui.auth.CodeInputScreen
 import com.example.myapplication.ui.auth.NewPasswordScreen
 import com.example.myapplication.ui.auth.ProfileScreen
+import com.example.myapplication.ui.auth.ImageAnalysisScreen
 import com.example.myapplication.ui.components.MainBottomNavigationBar
+import com.example.myapplication.ui.theme.LocalThemeManager
 import com.example.myapplication.ui.theme.MyApplicationTheme
+import com.example.myapplication.ui.theme.ThemeManager
 import com.example.myapplication.viewModel.AiConversationViewModel
 
 
@@ -35,9 +43,19 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MyApplicationTheme {
-                val navController = rememberNavController()
-                AppNavHost(navController = navController)
+            // Initialize ThemeManager
+            val themeManager = ThemeManager.getInstance(this)
+            
+            // Provide ThemeManager to the composition
+            androidx.compose.runtime.CompositionLocalProvider(
+                LocalThemeManager provides themeManager
+            ) {
+                MyApplicationTheme(
+                    darkTheme = themeManager.isDarkMode
+                ) {
+                    val navController = rememberNavController()
+                    AppNavHost(navController = navController)
+                }
             }
         }
     }
@@ -45,7 +63,42 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) {
-    NavHost(navController = navController, startDestination = "login") {
+    // Token auth manager for checking existing authentication
+    val tokenAuthManager: TokenAuthManager = viewModel()
+    
+    // Check authentication state on startup
+    LaunchedEffect(Unit) {
+        tokenAuthManager.checkExistingAuth { isAuthenticated ->
+            if (isAuthenticated) {
+                // Navigate to chat if already authenticated
+                navController.navigate("chat") {
+                    // Clear the back stack so user can't go back to login
+                    popUpTo("login") { inclusive = true }
+                }
+            } else {
+                // Navigate to login if not authenticated
+                navController.navigate("login") {
+                    // Clear any existing navigation stack
+                    popUpTo(navController.graph.startDestinationId) { saveState = true }
+                }
+            }
+        }
+    }
+    
+    NavHost(navController = navController, startDestination = "loading") {
+        // Loading screen while checking authentication
+        composable("loading") {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+                Text(
+                    text = "Checking authentication...",
+                    modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp)
+                )
+            }
+        }
         composable("login") {
             val vm: AuthViewModel = viewModel()
             LoginScreen(
@@ -104,7 +157,6 @@ composable("chat") {
         content = {
             ChatPage(
                 viewModel = vm,
-                userId = "123e4567-e89b-12d3-a456-426614174000"
             )
         }
     )
@@ -114,9 +166,32 @@ composable("profile") {
     MainScreen(
         navController = navController,
         content = {
-            ProfileScreen {
-                navController.popBackStack()
-            }
+            ProfileScreen(
+                onEditProfile = {
+                    // TODO: Implement profile editing
+                },
+                onBack = { 
+                    navController.popBackStack()
+                },
+                onLogout = {
+                    tokenAuthManager.logout()
+                    // Navigate back to login screen
+                    navController.navigate("login") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                }
+            )
+        }
+    )
+}
+
+composable("image_analysis") {
+    MainScreen(
+        navController = navController,
+        content = {
+            ImageAnalysisScreen(
+                onBack = { navController.popBackStack() }
+            )
         }
     )
 }
@@ -136,8 +211,8 @@ fun MainScreen(
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route
             
-            // Only show bottom navigation for main screens (chat and profile)
-            if (currentRoute in listOf("chat", "profile")) {
+            // Only show bottom navigation for main screens (chat, profile, and image_analysis)
+            if (currentRoute in listOf("chat", "profile", "image_analysis")) {
                 MainBottomNavigationBar(navController = navController)
             }
         }

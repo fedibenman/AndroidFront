@@ -1,6 +1,10 @@
 package com.example.myapplication.Repository
 
 import android.util.Log
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import java.io.ByteArrayOutputStream
+import android.util.Base64
 import com.example.myapplication.AppContextHolder
 import com.example.myapplication.ui.auth.TokenDataStoreManager
 import io.ktor.client.call.*
@@ -20,27 +24,38 @@ class AiConversationRepository {
     private val baseUrl = ApiClient.BASE_URL
 
 
+
+
+
+
+
     // Create a conversation
-    suspend fun createConversation(dto: CreateConversationDto): Conversation {
+    suspend fun createConversation(dto: CreateConversationDto, token: String): Conversation {
         return client.post(baseUrl) {
             contentType(ContentType.Application.Json)
+            headers {
+                append("Authorization", "Bearer $token")
+            }
             setBody(dto)
         }.body()
     }
 
-    suspend fun createNewConversationOnServer(dto: CreateConversationDto): Conversation {
+    suspend fun createNewConversationOnServer(dto: CreateConversationDto, token: String): Conversation {
         // Send POST request to /ai-conversation endpoint
         return client.post("$baseUrl") {
             contentType(ContentType.Application.Json)
+            headers {
+                append("Authorization", "Bearer $token")
+            }
             setBody(dto)
         }.body()
     }
 
-    // Get all conversations for a user
-    suspend fun getConversations(userId: String, token: String): List<Conversation> {
-        Log.e("Error", "got the cnvos")
+    // Get all conversations for a user using auth token
+    suspend fun getConversations(token: String): List<Conversation> {
+        Log.e("Error", "got the conversations")
 
-        val url = "$baseUrl?userId=$userId"
+        val url = "$baseUrl"
 
         return client.get(url) {
             headers {
@@ -51,32 +66,42 @@ class AiConversationRepository {
 
 
     // Create a message
-    suspend fun createMessage(conversationId: String, dto: CreateMessageDto): Message {
+    suspend fun createMessage(conversationId: String, dto: CreateMessageDto, token: String): Message {
         Log.e("sending" , dto.toString())
         return client.post("$baseUrl/$conversationId/messages") {
             contentType(ContentType.Application.Json)
+            headers {
+                append("Authorization", "Bearer $token")
+            }
             setBody(dto)
         }.body()
     }
 
-    // Get all messages
-    suspend fun getMessages(conversationId: String, userId: String): List<Message> {
-        return client.get("$baseUrl/$conversationId/messages?userId=$userId").body()
+    // Get all messages for a conversation
+    suspend fun getMessages(conversationId: String,  token: String): List<Message> {
+        return client.get("$baseUrl/$conversationId/messages") {
+            headers {
+                append("Authorization", "Bearer $token")
+            }
+        }.body()
     }
 
     // Edit a message
-    suspend fun editMessage(messageId: String, newText: String): Message {
-        Log.d("AiConversationRepository", "Starting editMessage: messageId=$messageId, newText=$newText")
+    suspend fun editMessage(messageId: String,  dto : EditMessageDto,token: String): Message {
         try {
             val url = "$baseUrl/messages/$messageId"
             Log.d("AiConversationRepository", "Making PUT request to URL: $url")
-            
-            val requestBody = mapOf("content" to newText)
-            Log.d("AiConversationRepository", "Request body: $requestBody")
+
+            // Create a proper data class for the request body, similar to CreateMessageDto
+
+            Log.d("AiConversationRepository", "Request body: $dto")
             
             val response = client.put(url) {
                 contentType(ContentType.Application.Json)
-                setBody(requestBody)
+                headers {
+                    append("Authorization", "Bearer $token")
+                }
+                setBody(dto)
             }
             
             // Log the response body to see what the server actually returns
@@ -92,13 +117,32 @@ class AiConversationRepository {
         }
     }
 
+
     // Delete a message
-    suspend fun deleteMessage(messageId: String) {
-        client.delete("$baseUrl/messages/$messageId")
+    suspend fun deleteMessage(messageId: String, token: String) {
+        Log.d("AiConversationRepository", "Starting deleteMessage: messageId=$messageId")
+        try {
+            val url = "$baseUrl/messages/$messageId"
+            Log.d("AiConversationRepository", "Making DELETE request to URL: $url")
+            
+            val response = client.delete(url) {
+                headers {
+                    append("Authorization", "Bearer $token")
+                }
+            }
+            
+            // Log the response to confirm deletion
+            val responseText = response.bodyAsText()
+            Log.d("AiConversationRepository", "Message deletion response: $responseText")
+            Log.d("AiConversationRepository", "Message deleted successfully: $messageId")
+        } catch (e: Exception) {
+            Log.e("AiConversationRepository", "Error deleting message messageId=$messageId", e)
+            throw e
+        }
     }
 
     // Edit a conversation title
-    suspend fun editConversation(conversationId: String, title: String): Conversation {
+    suspend fun editConversation(conversationId: String, title: String, token: String): Conversation {
         Log.d("AiConversationRepository", "Starting editConversation: conversationId=$conversationId, title=$title")
         try {
             val url = "$baseUrl/$conversationId"
@@ -109,6 +153,9 @@ class AiConversationRepository {
             
             val response = client.put(url) {
                 contentType(ContentType.Application.Json)
+                headers {
+                    append("Authorization", "Bearer $token")
+                }
                 setBody(requestBody)
             }
             
@@ -126,8 +173,12 @@ class AiConversationRepository {
     }
 
     // Delete a conversation
-    suspend fun deleteConversation(conversationId: String) {
-        client.delete("$baseUrl/$conversationId")
+    suspend fun deleteConversation(conversationId: String, token: String) {
+        client.delete("$baseUrl/$conversationId") {
+            headers {
+                append("Authorization", "Bearer $token")
+            }
+        }
     }
 }
 
@@ -142,7 +193,7 @@ object ApiClient {
         }
     }
 
-    const val BASE_URL = "http://192.168.225.182:3001/ai-conversations"
+    const val BASE_URL = "http://192.168.109.182:3001/ai-conversations"
 }
 
 
@@ -163,26 +214,39 @@ data class Conversation(
 
 @Serializable
 data class CreateConversationDto(
-    val title: String,
-    val userId: String
+    val title: String
 )
 
 
 
 @Serializable
 data class Message(
-    @SerialName("_id") val id: String,
-    val conversationId: String,
+    @SerialName("id") val id: String  ,
+    @SerialName("conversationId") val conversationId: String,
     val sender: String = "sender",
     val content: String,
     val timestamp: String? = null,
+    val images : List<ImageData> = emptyList()
 )
+
 
 @Serializable
 data class CreateMessageDto(
-    var conversationId: String = "",
-    val userId: String,
-    val content: String ,
-    val sender: String ="user"
+    val content: String,
+    val sender: String,
+    val conversationId: String,
+    val images: List<ImageData> = emptyList() // Additional field for images
+)
 
+@Serializable
+data class EditMessageDto(
+    val content: String,
+    val images: List<ImageData> = emptyList() // Additional field for images
+)
+
+@Serializable
+data class ImageData(
+    val base64: String,
+    val mimeType: String,
+    val fileName: String
 )

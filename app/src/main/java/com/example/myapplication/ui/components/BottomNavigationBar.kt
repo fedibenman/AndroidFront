@@ -27,6 +27,11 @@ fun MainBottomNavigationBar(
             label = "Chat"
         ),
         BottomNavigationItem(
+            route = "image_analysis", 
+            icon = R.drawable.image_container,
+            label = "Analysis"
+        ),
+        BottomNavigationItem(
             route = "profile", 
             icon = R.drawable.user,
             label = "Profile"
