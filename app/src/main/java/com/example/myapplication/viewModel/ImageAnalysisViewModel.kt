@@ -4,7 +4,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.example.myapplication.DTOs.Profile
 import com.example.myapplication.Repository.ImageAnalysisRepository
-import com.example.myapplication.Repository.AnalysisResult
+import com.example.myapplication.Repository.ImageAnalysisResponseDto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -25,34 +25,29 @@ class ImageAnalysisViewModel : ViewModel() {
      * @param bitmap The image to analyze
      */
     suspend fun analyzeImage(bitmap: android.graphics.Bitmap) {
-        withContext(Dispatchers.IO) {
-            isLoading.value = true
-            error.value = null
-            analysisResult.value = null
-            
-            try {
-                val result = repository.analyzeImage(bitmap)
-                
-                if (result.isSuccess) {
-                    val analysis = result.getOrNull()
-                    val formattedResult = """
-                        Analysis Results:
-                        - Detected Level: ${analysis?.detectedLevel ?: "Unknown"}
-                        - Confidence: ${analysis?.confidence?.toInt() ?: 0}%
-                        - Recommendations: 
-                          ${analysis?.recommendations?.joinToString("\n                          ") { "* $it" } ?: "-"}
-                        - Message: ${analysis?.message ?: ""}
-                    """.trimIndent()
-                    
-                    analysisResult.value = formattedResult
-                } else {
-                    error.value = result.exceptionOrNull()?.message ?: "Analysis failed"
+        isLoading.value = true
+        error.value = null
+        analysisResult.value = null
+
+        try {
+            val result = repository.analyzeImage(bitmap)
+
+            if (result.isSuccess) {
+                val analysis = result.getOrNull()
+                // Display just the message from the API response
+                val message = analysis?.message;
+                if (message == null) {
+                    throw Error("analysis.message is null or undefined");
                 }
-            } catch (e: Exception) {
-                error.value = "Analysis failed: ${e.message}"
-            } finally {
-                isLoading.value = false
+
+                analysisResult.value = message;
+            } else {
+                error.value = result.exceptionOrNull()?.message ?: "Analysis failed"
             }
+        } catch (e: Exception) {
+            error.value = "Analysis failed: ${e.message}"
+        } finally {
+            isLoading.value = false
         }
     }
     
