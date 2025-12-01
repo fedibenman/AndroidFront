@@ -6,6 +6,6 @@ data class Post(
     val content: String,
     val author: User?,           // 🔥 OBJET USER
     val comments: List<Comment>, // 🔥 LISTE COMMENT AVEC USER
-    val likes: Int,
+    val likes: List<String>? = emptyList(),     // 🔥 LISTE DES IDs DES USERS QUI ONT LIKÉ
     val photo: String? = null // 📸 IMAGE URL
 )

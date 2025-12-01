@@ -153,17 +153,30 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
 
         // Community section: list, create, edit
         composable("community") {
-            // refresh posts when entering
-            LaunchedEffect(Unit) { postViewModel.loadPosts() }
-            MainScreen(navController = navController) {
-                CommunityScreen(
-                    postViewModel = postViewModel,
-                    onCreatePost = { navController.navigate("create_post") },
-                    onEditPost = { post -> navController.navigate("edit_post/${post._id}") },
-                    onDeletePost = { post -> post._id?.let { postViewModel.deletePost(it) {} } },
-                    onNavigateToChat = { navController.navigate("chat_rooms") }
-                )
+            // Refresh posts when entering the screen
+            LaunchedEffect(Unit) {
+                postViewModel.loadPosts()
             }
+            
+            MainScreen(
+                navController = navController,
+                content = {
+                    CommunityScreen(
+                        postViewModel = postViewModel,
+                        onCreatePost = { navController.navigate("create_post") },
+                        onEditPost = { post -> navController.navigate("edit_post/${post._id}") },
+                        onDeletePost = { post -> post._id?.let { postViewModel.deletePost(it) {} } },
+                        onNavigateToChat = { navController.navigate("chat_rooms") },
+                        onNavigateToNotifications = { navController.navigate("notifications") }
+                    )
+                }
+            )
+        }
+        composable("notifications") {
+            com.example.myapplication.community.ui.screens.NotificationScreen(
+                postViewModel = postViewModel,
+                onBack = { navController.popBackStack() }
+            )
         }
 
         composable("create_post") {

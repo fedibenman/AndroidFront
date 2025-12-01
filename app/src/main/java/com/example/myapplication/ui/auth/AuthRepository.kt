@@ -72,7 +72,7 @@ class KtorAuthRepository : AuthRepository {
         defaultRequest {
             // When running on Android emulator, use 10.0.2.2 to reach host machine's localhost.
             // Ensure your Nest API is running on the host at port 3000.
-            url("http://172.18.11.124:3001/")
+            url("http://172.18.11.115:3001/")
             contentType(ContentType.Application.Json)
         }
     }

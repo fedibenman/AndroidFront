@@ -32,7 +32,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     val typingUsers: StateFlow<Set<String>> = repository.typingUsers
     
     private val _currentUserId = MutableStateFlow<String?>(null)
+    val currentUserIdFlow: StateFlow<String?> = _currentUserId.asStateFlow()
     private val _currentUserName = MutableStateFlow<String>("User")
+
+    private val _replyingToMessage = MutableStateFlow<ChatMessage?>(null)
+    val replyingToMessage: StateFlow<ChatMessage?> = _replyingToMessage.asStateFlow()
     
     init {
         loadRooms()
@@ -51,7 +55,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                         if (profile != null) {
                             Log.d("ChatViewModel", "Profile loaded: ${profile.name}, ID: ${profile.id}")
                             _currentUserId.value = profile.id
-                            _currentUserName.value = profile.name ?: "User"
+                            // Use email as fallback if name is null or empty
+                            _currentUserName.value = profile.name?.ifEmpty { profile.email } ?: profile.email
                         } else {
                             Log.e("ChatViewModel", "Failed to load profile: ${result.exceptionOrNull()}")
                         }
@@ -86,8 +91,17 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         val userId = _currentUserId.value ?: "unknown"
         val userName = _currentUserName.value
         
-        repository.sendMessage(userId, userName, content, room._id)
+        val replyTo = _replyingToMessage.value?.let {
+            com.example.myapplication.chat.model.ReplyInfo(
+                messageId = it._id ?: "",
+                content = if (it.audioUrl != null) "Voice Message" else it.content,
+                senderName = it.senderName
+            )
+        }
+
+        repository.sendMessage(userId, userName, content, room._id, replyTo = replyTo)
         repository.sendStopTyping(room._id)
+        _replyingToMessage.value = null
     }
     
     fun onTyping(isTyping: Boolean) {
@@ -99,6 +113,29 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         } else {
             repository.sendStopTyping(room._id)
         }
+    }
+    
+    fun addReaction(messageId: String, emoji: String) {
+        val room = _currentRoom.value ?: return
+        val userId = _currentUserId.value ?: return
+        val userName = _currentUserName.value
+        
+        repository.addReaction(messageId, emoji, userId, userName, room._id)
+    }
+    
+    fun removeReaction(messageId: String, emoji: String) {
+        val room = _currentRoom.value ?: return
+        val userId = _currentUserId.value ?: return
+        
+        repository.removeReaction(messageId, emoji, userId, room._id)
+    }
+
+    fun startReplying(message: ChatMessage) {
+        _replyingToMessage.value = message
+    }
+
+    fun cancelReply() {
+        _replyingToMessage.value = null
     }
     
     private val audioRecorder = com.example.myapplication.chat.utils.AudioRecorder(context)
@@ -169,10 +206,18 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             
             val response = repository.uploadAudio(file)
             if (response != null) {
-                repository.sendMessage(userId, userName, "Voice Message", room._id, response.audioUrl, response.transcription, duration)
+                val replyTo = _replyingToMessage.value?.let {
+                    com.example.myapplication.chat.model.ReplyInfo(
+                        messageId = it._id ?: "",
+                        content = if (it.audioUrl != null) "Voice Message" else it.content,
+                        senderName = it.senderName
+                    )
+                }
+                repository.sendMessage(userId, userName, "Voice Message", room._id, response.audioUrl, response.transcription, duration, replyTo)
             }
             _recordedAudioFile.value = null
             audioFile = null
+            _replyingToMessage.value = null
         }
     }
 
