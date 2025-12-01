@@ -32,8 +32,6 @@ import com.example.myapplication.ui.theme.PressStart
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.myapplication.viewModel.ImageAnalysisViewModel
@@ -82,7 +80,11 @@ fun ImageAnalysisScreen(
         }
         
         scope.launch {
-            viewModel.analyzeImage(selectedImageBitmap!!)
+            try {
+                viewModel.analyzeImage(selectedImageBitmap!!)
+            } catch (e: Exception) {
+                viewModel.error.value = "Analysis failed: ${e.message}"
+            }
         }
     }
 
@@ -240,26 +242,12 @@ fun ImageAnalysisScreen(
                     .clip(RoundedCornerShape(12.dp))
                     .padding(16.dp)
             ) {
-                Column(
-                    modifier = Modifier.verticalScroll(rememberScrollState())
-                ) {
-                    Text(
-                        text = "Analysis Results",
-                        style = TextStyle(
-                            color = Color(0xFF4CAF50),
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
-                        ),
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    )
-                    
-                    Text(
-                        text = it,
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        lineHeight = 20.sp
-                    )
-                }
+                Text(
+                    text = it,
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    lineHeight = 20.sp
+                )
             }
         }
     }

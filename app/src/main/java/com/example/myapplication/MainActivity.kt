@@ -212,6 +212,12 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
             }
         }
 
+        composable("image_analysis") {
+            MainScreen(navController = navController) {
+                ImageAnalysisScreen(onBack = { navController.popBackStack() })
+            }
+        }
+
         composable("profile") {
             MainScreen(navController = navController) {
                 ProfileScreen(onBack = { navController.popBackStack() })

@@ -1,14 +1,16 @@
 package com.example.myapplication.Repository
 
-import android.util.Base64
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.Base64
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
+import android.util.Log
 
 /**
  * Repository for handling image analysis operations
@@ -16,41 +18,48 @@ import java.net.URL
  */
 class ImageAnalysisRepository {
     
-    // TODO: Replace with your actual backend API endpoint
-    private val baseUrl = "https://your-backend-api.com/analyze"
+    private val baseUrl = "http://192.168.109.182:3001/analyze"
     
     /**
      * Analyzes an image and returns the detected level
      * @param bitmap The image to analyze
      * @return AnalysisResult containing the detected level and other information
      */
-    suspend fun analyzeImage(bitmap: Bitmap): Result<AnalysisResult> {
+    suspend fun analyzeImage(bitmap: Bitmap): Result<ImageAnalysisResponseDto> {
         return withContext(Dispatchers.IO) {
             try {
                 // Convert bitmap to base64
                 val base64String = convertBitmapToBase64(bitmap)
-                
-                // Create the request body
+
+                // Create the request body matching the Nest DTO
                 val requestBody = """
                     {
                         "image": "$base64String",
-                        "imageType": "jpeg"
+                        "imageType": "image/jpeg"
                     }
                 """.trimIndent()
-                
+
+                // Log the request
+                Log.d("ImageAnalysis", "Sending request to: $baseUrl")
+                Log.d("ImageAnalysis", "Request body: $requestBody")
+
                 // Make the API call
                 val response = makeApiCall(requestBody)
-                
+
+                // Log the response
+                Log.d("ImageAnalysis", "Response: $response")
+
                 // Parse the response
                 val result = parseResponse(response)
-                
+
                 Result.success(result)
             } catch (e: Exception) {
+                Log.e("ImageAnalysis", "Error during analysis: ${e.message}", e)
                 Result.failure(e)
             }
         }
     }
-    
+
     /**
      * Converts a Bitmap to Base64 encoded string
      */
@@ -83,17 +92,24 @@ class ImageAnalysisRepository {
             
             // Read the response
             val responseCode = connection.responseCode
+            Log.d("ImageAnalysis", "HTTP Response Code: $responseCode")
+            
             val response = if (responseCode in 200..299) {
                 connection.inputStream.bufferedReader().use { it.readText() }
             } else {
                 connection.errorStream?.bufferedReader()?.use { it.readText() } ?: "HTTP Error: $responseCode"
             }
             
+            Log.d("ImageAnalysis", "Raw response: $response")
+            
             if (responseCode !in 200..299) {
                 throw IOException("HTTP Error: $responseCode - $response")
             }
             
             return response
+        } catch (e: Exception) {
+            Log.e("ImageAnalysis", "Network error: ${e.message}", e)
+            throw e
         } finally {
             connection.disconnect()
         }
@@ -102,30 +118,38 @@ class ImageAnalysisRepository {
     /**
      * Parses the JSON response from the backend
      */
-    private fun parseResponse(response: String): AnalysisResult {
-        // TODO: Implement proper JSON parsing using a library like kotlinx.serialization or Gson
-        // For now, this is a simple mock implementation
-        
-        // Mock response parsing - replace with actual JSON parsing
-        return AnalysisResult(
-            detectedLevel = "Intermediate",
-            confidence = 87.5f,
-            recommendations = listOf(
-                "Practice more advanced techniques",
-                "Focus on consistency",
-                "Work on timing and accuracy"
-            ),
-            message = "Level successfully detected and updated"
-        )
+    private fun parseResponse(response: String): ImageAnalysisResponseDto {
+        try {
+            val jsonObject = JSONObject(response)
+            
+            // Extract data from JSON response matching the Nest DTO
+            val success = jsonObject.optBoolean("success", false)
+            val message = jsonObject.optString("message", "")
+            
+            return ImageAnalysisResponseDto(
+                success = success,
+                message = message
+            )
+        } catch (e: Exception) {
+            throw IOException("Failed to parse response: ${e.message}")
+        }
     }
 }
 
 /**
- * Data class representing the analysis result
+ * Data class representing the image analysis request DTO
  */
-data class AnalysisResult(
-    val detectedLevel: String,
-    val confidence: Float,
-    val recommendations: List<String>,
-    val message: String
+data class ImageAnalysisRequestDto(
+    val image: String,
+    val imageType: String = "image/jpeg"
 )
+
+
+/**
+ * Data class representing the image analysis response DTO
+ */
+data class ImageAnalysisResponseDto(
+    val success: Boolean,
+    val message: String?
+)
+
