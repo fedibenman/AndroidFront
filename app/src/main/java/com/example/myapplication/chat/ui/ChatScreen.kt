@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -81,14 +82,50 @@ fun ChatScreen(
     ) {
 
         /* ---------- HEADER ---------- */
-        Text(
-            text = currentRoom?.name ?: "Room",
+        /* ---------- HEADER ---------- */
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center,
-            fontFamily = PressStart,
-            fontSize = 12.sp,
-            color = PixelBlack
-        )
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Spacer to balance the row if we want the title centered, or just put title on left/center
+            // Let's use a Box to center the title and put the button on the right
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = currentRoom?.name ?: "Room",
+                    modifier = Modifier.align(Alignment.Center),
+                    textAlign = TextAlign.Center,
+                    fontFamily = PressStart,
+                    fontSize = 12.sp,
+                    color = PixelBlack
+                )
+
+                IconButton(
+                    onClick = {
+                        val userId = viewModel.currentUserIdFlow.value
+                        val userName = viewModel.currentUserName.value
+                        val roomId = currentRoom?._id
+
+                        if (userId != null && roomId != null) {
+                            val intent = android.content.Intent(context, com.example.myapplication.chat.ui.CallActivity::class.java).apply {
+                                putExtra("userID", userId)
+                                putExtra("userName", userName)
+                                putExtra("callID", roomId)
+                            }
+                            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                            context.startActivity(intent)
+                        }
+                    },
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Call,
+                        contentDescription = "Start Call",
+                        tint = PixelBlack
+                    )
+                }
+            }
+        }
 
         Spacer(Modifier.height(8.dp))
 
