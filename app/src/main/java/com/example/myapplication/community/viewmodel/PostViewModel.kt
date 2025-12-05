@@ -32,6 +32,9 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     private val _posts = MutableStateFlow<List<Post>>(emptyList())
     val posts: StateFlow<List<Post>> = _posts.asStateFlow()
 
+    private val _replyingToComment = MutableStateFlow<Comment?>(null)
+    val replyingToComment: StateFlow<Comment?> = _replyingToComment.asStateFlow()
+
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
@@ -118,6 +121,43 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // -------------------------------
+    // Dislike post
+    // -------------------------------
+    fun dislikePost(postId: String) {
+        viewModelScope.launch {
+
+            // Optimistic UI update
+            _posts.value = _posts.value.map { post ->
+                if (post._id == postId) {
+                    val currentUserId = getCurrentUserId() ?: fallbackUserId
+                    val currentDislikes = post.dislikes?.toMutableList() ?: mutableListOf()
+                    val currentLikes = post.likes?.toMutableList() ?: mutableListOf()
+                    
+                    // Remove from likes if switching from like to dislike
+                    currentLikes.remove(currentUserId)
+                    
+                    if (currentDislikes.contains(currentUserId)) {
+                        currentDislikes.remove(currentUserId)
+                    } else {
+                        currentDislikes.add(currentUserId)
+                    }
+                    post.copy(dislikes = currentDislikes, likes = currentLikes)
+                } else post
+            }
+
+            try {
+                val userId = getCurrentUserId() ?: fallbackUserId
+                val body = mapOf("userId" to userId)
+                api.dislikePost(postId, body)
+            } catch (e: Exception) {
+                Log.e("PostViewModel", "Error disliking post", e)
+            }
+
+            loadPosts()
+        }
+    }
+
+    // -------------------------------
     // Add comment
     // -------------------------------
     fun addComment(postId: String, text: String) {
@@ -125,12 +165,16 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val userId = getCurrentUserId() ?: fallbackUserId
 
-                val body = mapOf(
+                val body = mutableMapOf(
                     "content" to text,
                     "postId" to postId,
                     "photo" to "",
                     "userId" to userId
                 )
+                
+                _replyingToComment.value?.let { parent ->
+                    body["parentCommentId"] = parent._id ?: ""
+                }
 
                 val newComment = api.addComment(body)
 
@@ -140,6 +184,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
                     else post
                 }
 
+                _replyingToComment.value = null // Reset reply target
                 loadPosts()
             } catch (e: Exception) {
                 Log.e("PostViewModel", "Error adding comment", e)
@@ -283,5 +328,47 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     
     fun clearError() {
         _errorMessage.value = null
+    }
+    
+    // -------------------------------
+    // React to Post
+    // -------------------------------
+    fun setReplyTarget(comment: Comment?) {
+        _replyingToComment.value = comment
+    }
+
+    fun reactToPost(postId: String, emoji: String) {
+        viewModelScope.launch {
+            try {
+                val userId = getCurrentUserId() ?: fallbackUserId
+                val body = mapOf(
+                    "userId" to userId,
+                    "emoji" to emoji
+                )
+                api.reactToPost(postId, body)
+                loadPosts() // Reload to get updated reactions
+            } catch (e: Exception) {
+                Log.e("PostViewModel", "Error reacting to post", e)
+            }
+        }
+    }
+    
+    // -------------------------------
+    // React to Comment
+    // -------------------------------
+    fun reactToComment(commentId: String, emoji: String) {
+        viewModelScope.launch {
+            try {
+                val userId = getCurrentUserId() ?: fallbackUserId
+                val body = mapOf(
+                    "userId" to userId,
+                    "emoji" to emoji
+                )
+                api.reactToComment(commentId, body)
+                loadPosts() // Reload to get updated reactions
+            } catch (e: Exception) {
+                Log.e("PostViewModel", "Error reacting to comment", e)
+            }
+        }
     }
 }

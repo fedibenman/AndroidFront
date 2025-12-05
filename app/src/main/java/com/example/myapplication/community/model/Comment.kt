@@ -5,5 +5,8 @@ data class Comment(
     val content: String?,
     val author: User?,      // 🔥 OBJET USER
     val post: String?,
-    val likes: Int? = 0
+    val likes: Int? = 0,
+    val reactions: List<Reaction>? = emptyList(),
+    val replies: List<Comment>? = emptyList(),
+    val parentComment: String? = null
 )

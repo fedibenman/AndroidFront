@@ -15,6 +15,9 @@ interface ApiService {
     @POST("community/like/{id}")
     suspend fun likePost(@Path("id") postId: String, @Body body: Map<String, String>): Post
 
+    @POST("community/dislike/{id}")
+    suspend fun dislikePost(@Path("id") postId: String, @Body body: Map<String, String>): Post
+
     @POST("community/comment")
     suspend fun addComment(@Body body: Map<String, String>): Comment
 
@@ -39,5 +42,11 @@ interface ApiService {
     
     @PUT("notifications/{id}/read")
     suspend fun markNotificationAsRead(@Path("id") id: String): Notification
+    
+    @POST("community/post/react/{id}")
+    suspend fun reactToPost(@Path("id") postId: String, @Body body: Map<String, String>): Post
+    
+    @POST("community/comment/react/{id}")
+    suspend fun reactToComment(@Path("id") commentId: String, @Body body: Map<String, String>): Comment
 }
 

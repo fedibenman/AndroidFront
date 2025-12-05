@@ -101,7 +101,12 @@ fun NotificationItem(
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val icon = if (notification.type == "LIKE") "❤️" else "💬"
+        val icon = when (notification.type) {
+            "LIKE" -> "❤️"
+            "COMMENT" -> "💬"
+            "REACT" -> notification.emoji ?: "😊"
+            else -> "🔔"
+        }
         
         Text(
             text = icon,
@@ -110,8 +115,15 @@ fun NotificationItem(
         )
         
         Column(modifier = Modifier.weight(1f)) {
+            val message = when (notification.type) {
+                "LIKE" -> "${notification.fromUser?.name ?: "Unknown"} liked your post"
+                "COMMENT" -> "${notification.fromUser?.name ?: "Unknown"} commented on your post"
+                "REACT" -> "${notification.fromUser?.name ?: "Unknown"} reacted ${notification.emoji ?: "❤️"} to your post"
+                else -> "${notification.fromUser?.name ?: "Unknown"} interacted with your post"
+            }
+            
             Text(
-                text = "${notification.fromUser?.name ?: "Unknown"} ${if (notification.type == "LIKE") "liked your post" else "commented on your post"}",
+                text = message,
                 fontFamily = PressStart,
                 fontSize = 12.sp,
                 color = PixelBlack,

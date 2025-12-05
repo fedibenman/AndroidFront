@@ -48,10 +48,12 @@ class CallActivity : AppCompatActivity() {
         pendingCallID = callID
 
         // Check and request permissions
-        if (hasRequiredPermissions()) {
-            addCallFragment(userID, userName, callID)
-        } else {
-            requestPermissions()
+        if (savedInstanceState == null) {
+            if (hasRequiredPermissions()) {
+                addCallFragment(userID, userName, callID)
+            } else {
+                requestPermissions()
+            }
         }
     }
 

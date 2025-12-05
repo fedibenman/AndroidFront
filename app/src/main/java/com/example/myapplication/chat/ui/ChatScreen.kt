@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
@@ -49,6 +50,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun ChatScreen(
     viewModel: ChatViewModel,
+    onNavigateBack: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val currentRoom by viewModel.currentRoom.collectAsState()
@@ -82,48 +84,73 @@ fun ChatScreen(
     ) {
 
         /* ---------- HEADER ---------- */
-        /* ---------- HEADER ---------- */
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(4.dp, PixelBlack)
+                .background(PixelBlue)
+                .padding(12.dp)
         ) {
-            // Spacer to balance the row if we want the title centered, or just put title on left/center
-            // Let's use a Box to center the title and put the button on the right
-            Box(modifier = Modifier.fillMaxWidth()) {
+            // Back button
+            IconButton(
+                onClick = onNavigateBack,
+                modifier = Modifier.align(Alignment.CenterStart)
+            ) {
+                Icon(
+                    imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = PixelWhite,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            
+            // Room name
+            Text(
+                text = currentRoom?.name ?: "Room",
+                modifier = Modifier.align(Alignment.Center),
+                textAlign = TextAlign.Center,
+                fontFamily = PressStart,
+                fontSize = 14.sp,
+                color = PixelWhite,
+                fontWeight = FontWeight.Bold
+            )
+
+            // Voice call button - larger and more prominent
+            Button(
+                onClick = {
+                    val userId = viewModel.currentUserIdFlow.value
+                    val userName = viewModel.currentUserName.value
+                    val roomId = currentRoom?._id
+
+                    if (userId != null && roomId != null) {
+                        val intent = android.content.Intent(context, com.example.myapplication.chat.ui.CallActivity::class.java).apply {
+                            putExtra("userID", userId)
+                            putExtra("userName", userName)
+                            putExtra("callID", roomId)
+                        }
+                        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                        context.startActivity(intent)
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = PixelGreen),
+                shape = RoundedCornerShape(4.dp),
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .border(2.dp, PixelBlack, RoundedCornerShape(4.dp))
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Call,
+                    contentDescription = "Voice Call",
+                    tint = PixelBlack,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.width(4.dp))
                 Text(
-                    text = currentRoom?.name ?: "Room",
-                    modifier = Modifier.align(Alignment.Center),
-                    textAlign = TextAlign.Center,
+                    "CALL",
                     fontFamily = PressStart,
-                    fontSize = 12.sp,
+                    fontSize = 10.sp,
                     color = PixelBlack
                 )
-
-                IconButton(
-                    onClick = {
-                        val userId = viewModel.currentUserIdFlow.value
-                        val userName = viewModel.currentUserName.value
-                        val roomId = currentRoom?._id
-
-                        if (userId != null && roomId != null) {
-                            val intent = android.content.Intent(context, com.example.myapplication.chat.ui.CallActivity::class.java).apply {
-                                putExtra("userID", userId)
-                                putExtra("userName", userName)
-                                putExtra("callID", roomId)
-                            }
-                            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                            context.startActivity(intent)
-                        }
-                    },
-                    modifier = Modifier.align(Alignment.CenterEnd)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Call,
-                        contentDescription = "Start Call",
-                        tint = PixelBlack
-                    )
-                }
             }
         }
 

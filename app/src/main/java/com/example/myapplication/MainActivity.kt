@@ -172,14 +172,18 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                     onRoomClick = { room ->
                         chatViewModel.selectRoom(room)
                         navController.navigate("chat_room")
-                    }
+                    },
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
         }
 
         composable("chat_room") {
             MainScreen(navController = navController) {
-                ChatScreen(viewModel = chatViewModel)
+                ChatScreen(
+                    viewModel = chatViewModel,
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
         }
 

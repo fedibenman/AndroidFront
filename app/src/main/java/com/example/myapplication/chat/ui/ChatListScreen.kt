@@ -8,6 +8,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material3.*
@@ -33,6 +35,7 @@ import com.example.myapplication.ui.theme.PixelWhite
 fun ChatListScreen(
     viewModel: ChatViewModel,
     onRoomClick: (ChatRoom) -> Unit,
+    onNavigateBack: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val rooms by viewModel.rooms.collectAsState()
@@ -58,23 +61,36 @@ fun ChatListScreen(
                 .fillMaxSize()
                 .padding(12.dp)
         ) {
-            // Header
+            // Header with back button
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 12.dp)
                     .border(4.dp, PixelBlack)
                     .background(PixelBlue)
-                    .padding(12.dp),
-                contentAlignment = Alignment.Center
+                    .padding(12.dp)
             ) {
+                // Back button
+                IconButton(
+                    onClick = onNavigateBack,
+                    modifier = Modifier.align(Alignment.CenterStart)
+                ) {
+                    Icon(
+                        imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = PixelWhite,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                
                 Text(
                     text = "CHAT ROOMS",
                     fontFamily = PressStart,
                     fontWeight = FontWeight.Black,
                     fontSize = 20.sp,
                     color = PixelWhite,
-                    letterSpacing = 2.sp
+                    letterSpacing = 2.sp,
+                    modifier = Modifier.align(Alignment.Center)
                 )
             }
 
@@ -212,7 +228,7 @@ fun RoomItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                Icons.Default.Chat,
+                Icons.AutoMirrored.Filled.Chat,
                 contentDescription = null,
                 tint = PixelBlue,
                 modifier = Modifier.size(32.dp)
