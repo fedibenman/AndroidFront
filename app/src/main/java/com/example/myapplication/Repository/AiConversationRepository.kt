@@ -1,27 +1,27 @@
 package com.example.myapplication.Repository
 
 import android.util.Log
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import java.io.ByteArrayOutputStream
-import android.util.Base64
-import com.example.myapplication.AppContextHolder
-import com.example.myapplication.ui.auth.TokenDataStoreManager
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.http.*
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.delete
+import io.ktor.client.request.get
+import io.ktor.client.request.headers
+import io.ktor.client.request.post
+import io.ktor.client.request.put
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.SerialName
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
 class AiConversationRepository {
     private val client = ApiClient.client
-    private val baseUrl = ApiClient.BASE_URL
+    private val baseUrl = ApiClient.BASE_URL + "/ai-conversations"
 
 
 
@@ -29,16 +29,6 @@ class AiConversationRepository {
 
 
 
-    // Create a conversation
-    suspend fun createConversation(dto: CreateConversationDto, token: String): Conversation {
-        return client.post(baseUrl) {
-            contentType(ContentType.Application.Json)
-            headers {
-                append("Authorization", "Bearer $token")
-            }
-            setBody(dto)
-        }.body()
-    }
 
     suspend fun createNewConversationOnServer(dto: CreateConversationDto, token: String): Conversation {
         // Send POST request to /ai-conversation endpoint
@@ -95,7 +85,7 @@ class AiConversationRepository {
             // Create a proper data class for the request body, similar to CreateMessageDto
 
             Log.d("AiConversationRepository", "Request body: $dto")
-            
+
             val response = client.put(url) {
                 contentType(ContentType.Application.Json)
                 headers {
@@ -103,11 +93,11 @@ class AiConversationRepository {
                 }
                 setBody(dto)
             }
-            
+
             // Log the response body to see what the server actually returns
             val responseText = response.bodyAsText()
             Log.d("AiConversationRepository", "Message update response body: $responseText")
-            
+
             val result = response.body<Message>()
             Log.d("AiConversationRepository", "Edit message successful: ${result.id}")
             return result
@@ -124,13 +114,13 @@ class AiConversationRepository {
         try {
             val url = "$baseUrl/messages/$messageId"
             Log.d("AiConversationRepository", "Making DELETE request to URL: $url")
-            
+
             val response = client.delete(url) {
                 headers {
                     append("Authorization", "Bearer $token")
                 }
             }
-            
+
             // Log the response to confirm deletion
             val responseText = response.bodyAsText()
             Log.d("AiConversationRepository", "Message deletion response: $responseText")
@@ -147,10 +137,10 @@ class AiConversationRepository {
         try {
             val url = "$baseUrl/$conversationId"
             Log.d("AiConversationRepository", "Making PUT request to URL: $url")
-            
+
             val requestBody = mapOf("title" to title)
             Log.d("AiConversationRepository", "Request body: $requestBody")
-            
+
             val response = client.put(url) {
                 contentType(ContentType.Application.Json)
                 headers {
@@ -158,11 +148,11 @@ class AiConversationRepository {
                 }
                 setBody(requestBody)
             }
-            
+
             // Log the response body to see what the server actually returns
             val responseText = response.bodyAsText()
             Log.d("AiConversationRepository", "Response body: $responseText")
-            
+
             val result = response.body<Conversation>()
             Log.d("AiConversationRepository", "Edit conversation successful: ${result.id}")
             return result
@@ -193,7 +183,7 @@ object ApiClient {
         }
     }
 
-    const val BASE_URL = "http://192.168.109.182:3001/ai-conversations"
+    const val BASE_URL = "http://192.168.238.182:3001"
 }
 
 

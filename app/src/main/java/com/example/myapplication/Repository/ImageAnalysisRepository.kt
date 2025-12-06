@@ -1,8 +1,8 @@
 package com.example.myapplication.Repository
 
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.util.Base64
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -10,7 +10,6 @@ import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
-import android.util.Log
 
 /**
  * Repository for handling image analysis operations
@@ -18,7 +17,7 @@ import android.util.Log
  */
 class ImageAnalysisRepository {
     
-    private val baseUrl = "http://192.168.109.182:3001/analyze"
+    private val baseUrl = "http://192.168.238.182:3001/analyze"
     
     /**
      * Analyzes an image and returns the detected level

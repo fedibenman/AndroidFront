@@ -1,20 +1,22 @@
 package com.example.myapplication.storyCreator.ViewModel
 
-package com.example.myapplication.storyCreator.viewmodel
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.myapplication.storyCreator.data.dto.*
-import com.example.myapplication.storyCreator.data.repository.StoryProjectRepository
+import com.example.myapplication.AppContextHolder
+import com.example.myapplication.storyCreator.DTOs.CreateProjectDto
+import com.example.myapplication.storyCreator.DTOs.FlowchartDto
+import com.example.myapplication.storyCreator.DTOs.ProjectDto
+import com.example.myapplication.storyCreator.DTOs.toDto
+import com.example.myapplication.storyCreator.DTOs.toFlowNode
 import com.example.myapplication.storyCreator.model.FlowchartState
+import com.example.myapplication.storyCreator.repository.StoryProjectRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.util.UUID
 
 class StoryProjectViewModel(
-    private val repository: StoryProjectRepository
+    private val repository: StoryProjectRepository  = StoryProjectRepository(context = AppContextHolder.appContext)
 ) : ViewModel() {
 
     private val _projects = MutableStateFlow<List<ProjectDto>>(emptyList())
@@ -44,30 +46,27 @@ class StoryProjectViewModel(
         }
     }
 
-    fun createNewProject(title: String, description: String = ""): String {
-        val projectId = UUID.randomUUID().toString()
-        val now = System.currentTimeMillis()
-
-        val project = ProjectDto(
-            id = projectId,
-            title = title,
-            description = description,
-            createdAt = now,
-            updatedAt = now
-        )
-
+    fun createNewProject(title: String, description: String = "", onSuccess: (String) -> Unit) {
         viewModelScope.launch {
-            repository.saveProject(project)
-            loadProjects()
+            try {
+                val dto = CreateProjectDto(title = title, description = description)
+                val project = repository.createProject(dto)
+                loadProjects()
+                onSuccess(project.id)  // Call the callback with the new project ID
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
-
-        return projectId
     }
 
     fun deleteProject(projectId: String) {
         viewModelScope.launch {
-            repository.deleteProject(projectId)
-            loadProjects()
+            try {
+                repository.deleteProject(projectId)
+                loadProjects()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
@@ -89,6 +88,9 @@ class StoryProjectViewModel(
         }
     }
 
+
+
+
     fun saveFlowchart(projectId: String, state: FlowchartState) {
         viewModelScope.launch {
             try {
@@ -99,7 +101,7 @@ class StoryProjectViewModel(
                     updatedAt = System.currentTimeMillis()
                 )
                 repository.saveFlowchart(flowchartDto)
-                loadProjects() // Refresh to update timestamps
+                loadProjects()
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -112,4 +114,34 @@ class StoryProjectViewModel(
             _currentProject.value = project
         }
     }
+
+
+
+
+    private val _publishState = MutableStateFlow<PublishState>(PublishState.Idle)
+    val publishState = _publishState.asStateFlow()
+
+    fun publishProject(projectId: String, onSuccess: () -> Unit = {}) {
+        viewModelScope.launch {
+            _publishState.value = PublishState.Loading
+            try {
+                repository.publishProject(projectId)
+                _publishState.value = PublishState.Success
+                onSuccess()
+            } catch (e: Exception) {
+                _publishState.value = PublishState.Error(e.message ?: "Failed to publish project")
+            }
+        }
+    }
+
+    fun resetPublishState() {
+        _publishState.value = PublishState.Idle
+    }
+}
+
+sealed class PublishState {
+    object Idle : PublishState()
+    object Loading : PublishState()
+    object Success : PublishState()
+    data class Error(val message: String) : PublishState()
 }

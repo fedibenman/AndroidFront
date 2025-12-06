@@ -1,4 +1,8 @@
 package com.example.myapplication.storyCreator.Views
 
-class PopularFlows {
+import androidx.compose.runtime.Composable
+
+@Composable
+fun PopularFlows() {
+
 }

@@ -1,17 +1,22 @@
 package com.example.myapplication.ui.auth
 
 import LoginResponse
-import com.example.myapplication.DTOs.Profile
 import android.util.Log
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.contentnegotiation.*
+import com.example.myapplication.DTOs.Profile
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.net.ConnectException
@@ -72,7 +77,7 @@ class KtorAuthRepository : AuthRepository {
         defaultRequest {
             // When running on Android emulator, use 10.0.2.2 to reach host machine's localhost.
             // Ensure your Nest API is running on the host at port 3000.
-            url("http://172.18.11.115:3001/")
+            url("http://192.168.238.182:3001/")
             contentType(ContentType.Application.Json)
         }
     }

@@ -1,4 +1,9 @@
 package com.example.myapplication.storyCreator.DTOs
 
-class PublishProjectDto {
-}
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class PublishProjectDto(
+    val projectId: String,
+
+)
