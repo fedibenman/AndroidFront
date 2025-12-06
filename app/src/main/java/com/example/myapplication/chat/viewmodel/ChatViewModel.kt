@@ -34,6 +34,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val _currentUserId = MutableStateFlow<String?>(null)
     val currentUserIdFlow: StateFlow<String?> = _currentUserId.asStateFlow()
     private val _currentUserName = MutableStateFlow<String>("User")
+    val currentUserName: StateFlow<String> = _currentUserName.asStateFlow()
 
     private val _replyingToMessage = MutableStateFlow<ChatMessage?>(null)
     val replyingToMessage: StateFlow<ChatMessage?> = _replyingToMessage.asStateFlow()

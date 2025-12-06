@@ -102,7 +102,8 @@ class NotificationRepository {
             toUser = data.getString("toUser"),
             postId = post,
             read = data.optBoolean("read", false),
-            createdAt = data.getString("createdAt")
+            createdAt = data.getString("createdAt"),
+            emoji = data.optString("emoji", null)
         )
     }
 

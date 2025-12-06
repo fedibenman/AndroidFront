@@ -17,7 +17,11 @@ import java.net.URL
  */
 class ImageAnalysisRepository {
     
+<<<<<<< HEAD
     private val baseUrl = "http://192.168.238.182:3001/analyze"
+=======
+    private val baseUrl = "http://10.0.2.2:3001/analyze"
+>>>>>>> d8587fa0d8c2db899b8a6ef793e73a5a7e4d3b1b
     
     /**
      * Analyzes an image and returns the detected level
@@ -37,13 +41,18 @@ class ImageAnalysisRepository {
                         "imageType": "image/jpeg"
                     }
                 """.trimIndent()
+                val jsonBody = JSONObject().apply {
+                    put("image", base64String)
+                    put("imageType", "image/jpeg")
+                }.toString()
 
                 // Log the request
                 Log.d("ImageAnalysis", "Sending request to: $baseUrl")
                 Log.d("ImageAnalysis", "Request body: $requestBody")
 
                 // Make the API call
-                val response = makeApiCall(requestBody)
+                val response = makeApiCall(jsonBody)
+
 
                 // Log the response
                 Log.d("ImageAnalysis", "Response: $response")
@@ -63,11 +72,12 @@ class ImageAnalysisRepository {
      * Converts a Bitmap to Base64 encoded string
      */
     private fun convertBitmapToBase64(bitmap: Bitmap): String {
-        val byteArrayOutputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
-        val byteArray = byteArrayOutputStream.toByteArray()
-        return Base64.encodeToString(byteArray, Base64.DEFAULT)
+        val output = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, output)
+        val byteArray = output.toByteArray()
+        return Base64.encodeToString(byteArray, Base64.NO_WRAP)  // FIXED
     }
+
     
     /**
      * Makes the HTTP API call to the backend

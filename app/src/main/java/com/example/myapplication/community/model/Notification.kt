@@ -7,7 +7,8 @@ data class Notification(
     val toUser: String,
     val postId: NotificationPost?,
     val read: Boolean,
-    val createdAt: String
+    val createdAt: String,
+    val emoji: String? = null // For REACT notifications
 )
 
 data class NotificationUser(

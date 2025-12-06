@@ -10,6 +10,17 @@
         android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    
+    <!-- Declare audio features -->
+    <uses-feature android:name="android.hardware.microphone" android:required="true" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
     <application
         android:name=".MyApp"
         android:usesCleartextTraffic="true"
@@ -31,6 +42,11 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
     </activity>
+
+    <activity
+        android:name=".chat.ui.CallActivity"
+        android:exported="false"
+        android:theme="@style/Theme.MyApplication" />
 
     </application>
 

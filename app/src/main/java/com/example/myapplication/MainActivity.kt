@@ -12,7 +12,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -30,20 +33,14 @@ import com.example.myapplication.community.ui.screens.CommunityScreen
 import com.example.myapplication.community.ui.screens.CreatePostScreen
 import com.example.myapplication.community.ui.screens.EditPostScreen
 import com.example.myapplication.community.viewmodel.PostViewModel
-import com.example.myapplication.storyCreator.ViewModel.CommunityProjectViewModel
-import com.example.myapplication.storyCreator.ViewModel.StoryProjectViewModel
-import com.example.myapplication.storyCreator.Views.FlowBuilderScreen
-import com.example.myapplication.storyCreator.Views.ProjectsMainScreen
-import com.example.myapplication.ui.auth.AuthViewModel
 import com.example.myapplication.ui.auth.ChatPage
-import com.example.myapplication.ui.auth.CodeInputScreen
-import com.example.myapplication.ui.auth.ImageAnalysisScreen
 import com.example.myapplication.ui.auth.LoginScreen
+import com.example.myapplication.ui.auth.SignupScreen
+import com.example.myapplication.ui.auth.AuthViewModel
+import com.example.myapplication.ui.auth.RequestResetCodeScreen
+import com.example.myapplication.ui.auth.CodeInputScreen
 import com.example.myapplication.ui.auth.NewPasswordScreen
 import com.example.myapplication.ui.auth.ProfileScreen
-import com.example.myapplication.ui.auth.RequestResetCodeScreen
-import com.example.myapplication.ui.auth.SignupScreen
-import com.example.myapplication.ui.auth.TokenAuthManager
 import com.example.myapplication.ui.components.MainBottomNavigationBar
 import com.example.myapplication.ui.theme.LocalThemeManager
 import com.example.myapplication.ui.theme.MyApplicationTheme
@@ -57,9 +54,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val themeManager = ThemeManager.getInstance(this)
 
-            androidx.compose.runtime.CompositionLocalProvider(
-                LocalThemeManager provides themeManager
-            ) {
+            CompositionLocalProvider(LocalThemeManager provides themeManager) {
                 MyApplicationTheme(darkTheme = themeManager.isDarkMode) {
                     val navController = rememberNavController()
 
@@ -108,8 +103,6 @@ fun AppNavHost(
     }
 
     NavHost(navController = navController, startDestination = "login") {
-
-        // LOGIN
         composable("login") {
             val vm: AuthViewModel = viewModel()
             LoginScreen(
@@ -119,8 +112,25 @@ fun AppNavHost(
                 onForgotPassword = { navController.navigate("forgot_password_request") }
             )
         }
+        // Check authentication state on startup and route accordingly
+        LaunchedEffect(Unit) {
+            tokenAuthManager.checkExistingAuth { isAuthenticated ->
+                if (isAuthenticated) {
+                    // Navigate to chat if already authenticated
+                    navController.navigate("chat") {
+                        // Clear the back stack so user can't go back to login
+                        popUpTo("login") { inclusive = true }
+                    }
+                } else {
+                    // Navigate to login if not authenticated
+                    navController.navigate("login") {
+                        // Clear any existing navigation stack
+                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                    }
+                }
+            }
+        }
 
-        // SIGNUP
         composable("signup") {
             val vm: AuthViewModel = viewModel()
             SignupScreen(
@@ -157,13 +167,15 @@ fun AppNavHost(
                 viewModel = vm,
                 onPasswordChanged = { navController.popBackStack("login", false) },
                 onBackToLogin = { navController.popBackStack("login", false) }
+                onPasswordChanged = { navController.popBackStack("login", false) },
+                onBackToLogin = { navController.popBackStack("login", false) }
             )
         }
 
-        // COMMUNITY FEED
+        // Community section: list, create, edit
         composable("community") {
             LaunchedEffect(Unit) { postViewModel.loadPosts() }
-            MainScreen(navController) {
+            MainScreen(navController = navController) {
                 CommunityScreen(
                     postViewModel = postViewModel,
                     onCreatePost = { navController.navigate("create_post") },
@@ -197,8 +209,8 @@ fun AppNavHost(
         composable(
             "edit_post/{postId}",
             arguments = listOf(navArgument("postId") { type = NavType.StringType })
-        ) { entry ->
-            val postId = entry.arguments?.getString("postId") ?: return@composable
+        ) {
+            val postId = it.arguments?.getString("postId") ?: return@composable
             EditPostScreen(
                 postId = postId,
                 postViewModel = postViewModel,
@@ -278,22 +290,29 @@ fun AppNavHost(
         // CHAT ROOMS
         composable("chat_rooms") {
             LaunchedEffect(Unit) { chatViewModel.loadRooms() }
-            MainScreen(navController) {
-                ChatListScreen(viewModel = chatViewModel, onRoomClick = { room ->
-                    chatViewModel.selectRoom(room)
-                    navController.navigate("chat_room")
-                })
+            MainScreen(navController = navController) {
+                ChatListScreen(
+                    viewModel = chatViewModel,
+                    onRoomClick = { room ->
+                        chatViewModel.selectRoom(room)
+                        navController.navigate("chat_room")
+                    },
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
         }
 
         // CHAT ROOM
         composable("chat_room") {
-            MainScreen(navController) {
-                ChatScreen(viewModel = chatViewModel)
+            MainScreen(navController = navController) {
+                ChatScreen(
+                    viewModel = chatViewModel,
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
         }
 
-        // AI CHAT (ChatPage)
+        // MAIN CHATPAGE (AI)
         composable("chat") {
             val vm: AiConversationViewModel = viewModel()
             MainScreen(navController) {
@@ -315,9 +334,8 @@ fun AppNavHost(
             }
         }
 
-        // FALLBACK
         composable("home") {
-            Text("Home screen")
+            Text(text = "Home screen (replace with your app's home)")
         }
     }
 }
@@ -338,8 +356,6 @@ fun MainScreen(navController: NavHostController, content: @Composable () -> Unit
             )) {
             MainBottomNavigationBar(navController = navController)
         }
-    }) { padding ->
-        Box(modifier = Modifier.padding(padding)) { content() }
     }
 }
 
