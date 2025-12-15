@@ -183,7 +183,7 @@ object ApiClient {
         }
     }
 
-    const val BASE_URL = "http://192.168.238.182:3001"
+    const val BASE_URL = "http://192.168.228.182:3001"
 
 }
 

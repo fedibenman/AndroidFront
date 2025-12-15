@@ -17,11 +17,10 @@ import java.net.URL
  */
 class ImageAnalysisRepository {
     
-<<<<<<< HEAD
-    private val baseUrl = "http://192.168.238.182:3001/analyze"
-=======
-    private val baseUrl = "http://10.0.2.2:3001/analyze"
->>>>>>> d8587fa0d8c2db899b8a6ef793e73a5a7e4d3b1b
+
+    private val baseUrl = "http://192.168.228.182:3001/analyze"
+
+
     
     /**
      * Analyzes an image and returns the detected level

@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 data class FlowchartDto(
     val projectId: String,
     val nodes: List<NodeDto>,
-    val updatedAt: Long
+    val updatedAt: Long 
 )
 
 

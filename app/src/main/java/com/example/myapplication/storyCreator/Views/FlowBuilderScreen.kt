@@ -1,7 +1,10 @@
-
 package com.example.myapplication.storyCreator.Views
 
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Paint
+import android.util.Base64
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -10,75 +13,80 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.input.pointer.*
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.*
-import com.example.myapplication.storyCreator.model.FlowNode
-import com.example.myapplication.storyCreator.model.FlowchartState
-import com.example.myapplication.storyCreator.model.NodeType
-import kotlin.math.roundToInt
-import kotlin.math.sqrt
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.sin
-
-
-import androidx.compose.ui.graphics.asImageBitmap
-import android.util.Base64
-import android.graphics.BitmapFactory
-import android.graphics.Paint
-import android.util.Log
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.EaseInCubic
-import androidx.compose.animation.core.EaseOutCubic
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.TextFields
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.pointer.changedToUp
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.myapplication.storyCreator.ViewModel.StoryProjectViewModel
+import com.example.myapplication.storyCreator.model.FlowNode
+import com.example.myapplication.storyCreator.model.FlowchartState
+import com.example.myapplication.storyCreator.model.NodeType
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.roundToInt
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 // Constants
 private const val NODE_WIDTH = 140
@@ -174,7 +182,6 @@ fun ImageUploadDialog(
     }
 }
 
-
 data class DrawingPath(
     val points: List<Offset>,
     val color: Color
@@ -242,7 +249,6 @@ fun saveSketchAsBase64(
         return null
     }
 }
-
 
 @Composable
 fun PixelArtIcon(iconType: String, modifier: Modifier = Modifier) {
@@ -448,7 +454,6 @@ fun SketchPadDialog(
     }
 }
 
-
 @Composable
 fun EditNodeDialog(
     node: FlowNode,
@@ -459,6 +464,8 @@ fun EditNodeDialog(
     var showImageOptions by remember { mutableStateOf(false) }
     var showSketchPad by remember { mutableStateOf(false) }
     var currentImageData by remember { mutableStateOf(node.imageData) }
+    var isGeneratingText by remember { mutableStateOf(false) }
+    var isGeneratingImage by remember { mutableStateOf(false) }
 
     Box(
         Modifier
@@ -530,6 +537,22 @@ fun EditNodeDialog(
                     )
                 }
 
+                // AI Generate Text Button
+                PixelTextButton(
+                    onClick = {
+                        isGeneratingText = true
+                        // TODO: Add AI text generation logic here
+                        kotlinx.coroutines.MainScope().launch {
+                            kotlinx.coroutines.delay(1500) // Simulate API call
+                            textValue = "Generated story text based on context..."
+                            isGeneratingText = false
+                        }
+                    },
+                    text = if (isGeneratingText) "⏳ GENERATING..." else "🤖 AI GENERATE TEXT",
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isGeneratingText
+                )
+
                 Text(
                     "📷 ADD IMAGE (OPTIONAL)",
                     fontFamily = FontFamily.Monospace,
@@ -555,6 +578,23 @@ fun EditNodeDialog(
                         modifier = Modifier.weight(1f)
                     )
                 }
+
+                // AI Generate Image Button
+                PixelTextButton(
+                    onClick = {
+                        isGeneratingImage = true
+                        // TODO: Add AI image generation logic here
+                        kotlinx.coroutines.MainScope().launch {
+                            kotlinx.coroutines.delay(2000) // Simulate API call
+                            currentImageData = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
+                            node.imageData = currentImageData
+                            isGeneratingImage = false
+                        }
+                    },
+                    text = if (isGeneratingImage) "⏳ GENERATING IMAGE..." else "🎨 AI GENERATE IMAGE",
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isGeneratingImage
+                )
 
                 if (currentImageData != null && currentImageData!!.isNotEmpty()) {
                     Box(
@@ -643,7 +683,6 @@ fun EditNodeDialog(
         }
     }
 }
-
 @Composable
 fun FlowchartCanvas(
     state: FlowchartState,
@@ -1228,7 +1267,7 @@ fun DrawConnections(
                     (target.position.y + toDragOffset.y) * scale + pan.y + nodeHeightPx / 2
                 )
                 val isSelected = selectedConnection?.first == node.id && selectedConnection?.second == targetId
-                val color = if (isSelected) Color(0xFFFF6B00) else Color.Black // Orange when selected
+                val color = if (isSelected) Color(0xFFFF6B00) else Color.White // Orange when selected
                 val strokeWidth = if (isSelected) 6f else 4f // Thicker default, even thicker when selected
                 drawConnectionLine(fromPoint, toPoint, color, false, strokeWidth)
             }
@@ -1745,24 +1784,30 @@ fun FlowBuilderScreen(
     val state = remember { FlowchartState(nodes) }
     var isLoading by remember { mutableStateOf(false) }
     var showSaveSuccess by remember { mutableStateOf(false) }
+    var currentTab by remember { mutableStateOf("flow") }
 
-    // Load project or create example nodes
+    // References from ViewModel
+    val references by viewModel?.references?.collectAsState() ?: remember { mutableStateOf(emptyList()) }
+    val projectArtStyle by viewModel?.projectArtStyle?.collectAsState() ?: remember { mutableStateOf(null) }
+    val referencesLoading by viewModel?.referencesLoading?.collectAsState() ?: remember { mutableStateOf(false) }
+
+    // Load project data
     LaunchedEffect(projectId) {
         if (projectId != null && viewModel != null) {
             isLoading = true
+            // Load flowchart
             viewModel.loadFlowchart(projectId) { flowchartState ->
                 if (flowchartState != null) {
-                    // Clear existing nodes and load project data
                     state.nodes.clear()
                     state.nodes.addAll(flowchartState.nodes)
                 } else {
-                    // Project exists but has no flowchart yet - start with empty
                     state.nodes.clear()
                 }
                 isLoading = false
             }
+            // Load references
+            viewModel.loadReferences(projectId)
         } else {
-            // No project ID - preload example nodes
             if (state.nodes.isEmpty()) {
                 val s = FlowNode(
                     type = NodeType.Start,
@@ -1783,36 +1828,93 @@ fun FlowBuilderScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Show loading indicator while loading project
-        if (isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = PixelGold)
-            }
-        } else {
-            // Pass the correct parameter name
-            FlowchartCanvas(
-                state = state,
-                onSaveGraph = { flow ->
-                    // Save to database if we have a projectId and viewModel
-                    if (projectId != null && viewModel != null) {
-                        viewModel.saveFlowchart(projectId, flow)
-                        showSaveSuccess = true
-                        // Hide success message after 2 seconds
-                        kotlinx.coroutines.MainScope().launch {
-                            kotlinx.coroutines.delay(2000)
-                            showSaveSuccess = false
+        Column(modifier = Modifier.fillMaxSize()) {
+            if (isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = PixelGold)
+                }
+            } else {
+                Box(modifier = Modifier.weight(1f)) {
+                    when (currentTab) {
+                        "flow" -> {
+                            FlowchartCanvas(
+                                state = state,
+                                onSaveGraph = { flow ->
+                                    if (projectId != null && viewModel != null) {
+                                        viewModel.saveFlowchart(projectId, flow)
+                                        showSaveSuccess = true
+                                        kotlinx.coroutines.MainScope().launch {
+                                            kotlinx.coroutines.delay(2000)
+                                            showSaveSuccess = false
+                                        }
+                                    }
+                                    onPersist(flow)
+                                }
+                            )
+                        }
+                        "references" -> {
+                            if (projectId != null && viewModel != null) {
+                                ReferencesScreen(
+                                    projectId = projectId,
+                                    references = references.toMutableList(),
+                                    projectArtStyle = projectArtStyle,
+                                    viewModel = viewModel,
+                                    isLoading = referencesLoading,
+                                    onArtStyleSelected = { artStyle ->
+                                        viewModel.updateArtStyle(projectId, artStyle)
+                                    },
+                                    onAddReference = { reference ->
+                                        viewModel.addReference(projectId, reference)
+                                    },
+                                    onUpdateReference = { reference ->
+                                        viewModel.updateReference(projectId, reference)
+                                    },
+                                    onDeleteReference = { referenceId ->
+                                        viewModel.deleteReference(projectId, referenceId)
+                                    }
+                                )
+                            } else {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        "References not available in preview mode",
+                                        fontFamily = FontFamily.Monospace,
+                                        color = androidx.compose.ui.graphics.Color.Gray
+                                    )
+                                }
+                            }
                         }
                     }
-                    // Also call the callback for any additional handling
-                    onPersist(flow)
                 }
-            )
+
+                // Tab Selector (Above Toolbar)
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF0D0D0D))
+                        .border(width = 2.dp, color = Color(0xFF000000))
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    PixelTextButton(
+                        onClick = { currentTab = "flow" },
+                        text = "📊 FLOW EDITOR",
+                        modifier = Modifier.weight(1f).height(40.dp)
+                    )
+                    PixelTextButton(
+                        onClick = { currentTab = "references" },
+                        text = "📚 REFERENCES",
+                        modifier = Modifier.weight(1f).height(40.dp)
+                    )
+                }
+            }
         }
 
-        // Save success notification
         if (showSaveSuccess) {
             Box(
                 modifier = Modifier
@@ -1849,6 +1951,7 @@ fun FlowBuilderScreen(
         }
     }
 }
+
 
 
 @Preview(name = "Flow Builder", showBackground = true, widthDp = 1080, heightDp = 600)

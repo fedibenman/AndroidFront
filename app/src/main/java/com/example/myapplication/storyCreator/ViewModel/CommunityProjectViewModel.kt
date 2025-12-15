@@ -1,9 +1,11 @@
 package com.example.myapplication.storyCreator.ViewModel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myapplication.AppContextHolder
 import com.example.myapplication.storyCreator.DTOs.CommunityProjectDto
+import com.example.myapplication.storyCreator.DTOs.toFlowchartState
 import com.example.myapplication.storyCreator.model.FlowchartState
 import com.example.myapplication.storyCreator.repository.CommunityProjectRepository
 import kotlinx.coroutines.flow.MutableStateFlow
