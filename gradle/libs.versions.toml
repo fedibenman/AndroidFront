@@ -1,5 +1,5 @@
 [versions]
-agp = "8.13.2"
+agp = "8.13.0"
 coilCompose = "2.7.0"
 converterGson = "3.0.0"
 kotlin = "2.0.21"
@@ -12,10 +12,9 @@ activityCompose = "1.8.0"
 composeBom = "2024.09.00"
 firebaseCrashlyticsBuildtools = "3.0.6"
 foundation = "1.9.5"
-prebuiltCallAndroid = "latest.release"
+prebuiltCallAndroid = "3.9.10"
 retrofit = "3.0.0"
 socketIoClient = "2.1.2"
-runtime = "1.10.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -39,7 +38,6 @@ androidx-compose-foundation = { group = "androidx.compose.foundation", name = "f
 prebuilt-call-android = { module = "com.github.ZEGOCLOUD:zego_uikit_prebuilt_call_android", version.ref = "prebuiltCallAndroid" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 socket-io-client = { module = "io.socket:socket.io-client", version.ref = "socketIoClient" }
-androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
