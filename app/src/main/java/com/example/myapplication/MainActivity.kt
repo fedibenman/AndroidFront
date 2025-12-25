@@ -23,8 +23,6 @@ import com.example.myapplication.chat.ui.ChatListScreen
 import com.example.myapplication.chat.ui.ChatScreen
 import com.example.myapplication.chat.viewmodel.ChatViewModel
 import com.example.myapplication.community.ui.screens.CommunityScreen
-import com.example.myapplication.community.ui.screens.CreatePostScreen
-import com.example.myapplication.community.ui.screens.EditPostScreen
 import com.example.myapplication.community.viewmodel.PostViewModel
 import com.example.myapplication.ui.auth.*
 import com.example.myapplication.ui.components.MainBottomNavigationBar
@@ -56,6 +54,7 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
     val postViewModel: PostViewModel = viewModel()
     val chatViewModel: ChatViewModel = viewModel()
     val tokenAuthManager: TokenAuthManager = viewModel()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     // --- FIX: ne doit PAS être dans NavHost ---
     LaunchedEffect(Unit) {
@@ -68,6 +67,25 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                 navController.navigate("login") {
                     popUpTo("login") { inclusive = true }
                 }
+            }
+        }
+    }
+    
+    // Listen for incoming calls
+    LaunchedEffect(tokenAuthManager.currentUser.value?.id) {
+        val userId = tokenAuthManager.currentUser.value?.id
+        if (userId != null) {
+            android.util.Log.d("MainActivity", "Setting up incoming call listener for user: $userId")
+            
+            val repository = com.example.myapplication.directmessages.data.DirectMessagesRepository.getInstance()
+            repository.listenForIncomingCalls(userId) { callRequest ->
+                android.util.Log.d("MainActivity", "Incoming call received from ${callRequest.callerName}")
+                
+                // Show notification
+                com.example.myapplication.calls.CallNotificationManager.showIncomingCallNotification(
+                    context,
+                    callRequest
+                )
             }
         }
     }
@@ -173,7 +191,8 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                         chatViewModel.selectRoom(room)
                         navController.navigate("chat_room")
                     },
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToDM = { navController.navigate("direct_messages") }
                 )
             }
         }
@@ -182,6 +201,85 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
             MainScreen(navController = navController) {
                 ChatScreen(
                     viewModel = chatViewModel,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+        }
+
+        // DIRECT MESSAGES
+        composable("direct_messages") {
+            val dmViewModel: com.example.myapplication.directmessages.viewmodel.DirectMessagesViewModel = viewModel()
+            val currentProfile by tokenAuthManager.currentUser
+            val userId = currentProfile?.id ?: ""
+            
+            LaunchedEffect(userId) { 
+                if (userId.isNotBlank()) {
+                    dmViewModel.loadConversations(userId) 
+                }
+            }
+            
+            MainScreen(navController = navController) {
+                com.example.myapplication.directmessages.ui.DirectMessagesListScreen(
+                    viewModel = dmViewModel,
+                    userId = userId,
+                    onConversationClick = { conversation ->
+                        navController.navigate("direct_message_chat/${conversation._id}")
+                    },
+                    onNavigateBack = { navController.popBackStack() },
+                    onNewMessage = { navController.navigate("user_search") }
+                )
+            }
+        }
+
+        composable(
+            "direct_message_chat/{conversationId}",
+            arguments = listOf(navArgument("conversationId") { type = NavType.StringType })
+        ) {
+            val conversationId = it.arguments?.getString("conversationId") ?: return@composable
+            val dmViewModel: com.example.myapplication.directmessages.viewmodel.DirectMessagesViewModel = viewModel()
+            val currentProfile by tokenAuthManager.currentUser
+            val userId = currentProfile?.id ?: ""
+            
+            LaunchedEffect(conversationId, userId) {
+                if (userId.isNotBlank()) {
+                    dmViewModel.loadConversationById(conversationId, userId)
+                }
+            }
+            
+            MainScreen(navController = navController) {
+                com.example.myapplication.directmessages.ui.DirectMessageScreen(
+                    viewModel = dmViewModel,
+                    userId = userId,
+                    currentUserName = currentProfile?.name ?: "User",
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+        }
+
+        composable("user_search") {
+            val dmViewModel: com.example.myapplication.directmessages.viewmodel.DirectMessagesViewModel = viewModel()
+            val currentProfile by tokenAuthManager.currentUser
+            val userId = currentProfile?.id ?: ""
+            
+            MainScreen(navController = navController) {
+                com.example.myapplication.directmessages.ui.UserSearchScreen(
+                    onUserClick = { user ->
+                        android.util.Log.d("MainActivity", "User clicked in search: ${user.name} (${user._id})")
+                        android.util.Log.d("MainActivity", "Current userId: $userId")
+                        
+                        if (userId.isBlank()) {
+                            android.util.Log.e("MainActivity", "userId is blank, cannot start conversation")
+                        } else {
+                            android.util.Log.d("MainActivity", "Starting conversation between $userId and ${user._id}")
+                            dmViewModel.startConversation(userId, user._id) { conversation ->
+                                android.util.Log.d("MainActivity", "Conversation started successfully: ${conversation._id}")
+                                android.util.Log.d("MainActivity", "Navigating to direct_message_chat/${conversation._id}")
+                                navController.navigate("direct_message_chat/${conversation._id}") {
+                                    popUpTo("direct_messages") { inclusive = false }
+                                }
+                            }
+                        }
+                    },
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
@@ -203,7 +301,15 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
 
         composable("profile") {
             MainScreen(navController = navController) {
-                ProfileScreen(onBack = { navController.popBackStack() })
+                ProfileScreen(
+                    onBack = { navController.popBackStack() },
+                    onLogout = {
+                        tokenAuthManager.logout()
+                        navController.navigate("login") {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
             }
         }
 
@@ -211,6 +317,45 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
             Text("Home screen (replace with your app's home)")
         }
     }
+}
+
+@Composable
+fun LoginScreen(
+    viewModel: AuthViewModel,
+    onSignupRequested: () -> Unit,
+    onLoginSuccess: () -> Unit,
+    onForgotPassword: () -> Unit
+) {
+    TODO("Not yet implemented")
+}
+
+@Composable
+fun SignupScreen(viewModel: AuthViewModel, onBack: () -> Boolean, onSignupSuccess: () -> Boolean) {
+    TODO("Not yet implemented")
+}
+
+@Composable
+fun CreatePostScreen(
+    postViewModel: PostViewModel,
+    onBack: () -> Boolean,
+    onPostCreated: () -> Boolean
+) {
+    TODO("Not yet implemented")
+}
+
+@Composable
+fun EditPostScreen(
+    postId: String,
+    postViewModel: PostViewModel,
+    onBack: () -> Boolean,
+    onUpdated: () -> Boolean
+) {
+    TODO("Not yet implemented")
+}
+
+@Composable
+fun ChatPage(viewModel: AiConversationViewModel) {
+    TODO("Not yet implemented")
 }
 
 @Composable

@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material3.*
@@ -36,6 +37,7 @@ fun ChatListScreen(
     viewModel: ChatViewModel,
     onRoomClick: (ChatRoom) -> Unit,
     onNavigateBack: () -> Unit = {},
+    onNavigateToDM: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val rooms by viewModel.rooms.collectAsState()
@@ -107,7 +109,27 @@ fun ChatListScreen(
             }
         }
 
-        // FAB to create room
+        // FAB for Direct Messages (left)
+        FloatingActionButton(
+            onClick = onNavigateToDM,
+            containerColor = PixelBlue,
+            contentColor = PixelWhite,
+            shape = RoundedCornerShape(4.dp),
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(16.dp)
+                .size(64.dp)
+                .border(4.dp, PixelBlack, RoundedCornerShape(4.dp))
+        ) {
+            Icon(
+                androidx.compose.material.icons.Icons.AutoMirrored.Filled.Message,
+                contentDescription = "Direct Messages",
+                tint = PixelWhite,
+                modifier = Modifier.size(32.dp)
+            )
+        }
+
+        // FAB to create room (right)
         FloatingActionButton(
             onClick = { showCreateDialog = true },
             containerColor = PixelGreen,

@@ -48,6 +48,7 @@ dependencies {
     implementation("androidx.room:room-runtime:2.8.2")
     implementation(libs.firebase.crashlytics.buildtools)
     implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.compose.runtime)
     ksp("androidx.room:room-compiler:2.8.2")
 
     implementation(libs.androidx.core.ktx)
