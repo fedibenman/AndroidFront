@@ -55,7 +55,6 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
     val postViewModel: PostViewModel = viewModel()
     val chatViewModel: ChatViewModel = viewModel()
     val tokenAuthManager: TokenAuthManager = viewModel()
-    val context = androidx.compose.ui.platform.LocalContext.current
 
     // --- FIX: ne doit PAS être dans NavHost ---
     LaunchedEffect(Unit) {
@@ -68,25 +67,6 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                 navController.navigate("login") {
                     popUpTo("login") { inclusive = true }
                 }
-            }
-        }
-    }
-    
-    // Listen for incoming calls
-    LaunchedEffect(tokenAuthManager.currentUser.value?.id) {
-        val userId = tokenAuthManager.currentUser.value?.id
-        if (userId != null) {
-            android.util.Log.d("MainActivity", "Setting up incoming call listener for user: $userId")
-            
-            val repository = com.example.myapplication.directmessages.data.DirectMessagesRepository.getInstance()
-            repository.listenForIncomingCalls(userId) { callRequest ->
-                android.util.Log.d("MainActivity", "Incoming call received from ${callRequest.callerName}")
-                
-                // Show notification
-                com.example.myapplication.calls.CallNotificationManager.showIncomingCallNotification(
-                    context,
-                    callRequest
-                )
             }
         }
     }
@@ -192,8 +172,7 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                         chatViewModel.selectRoom(room)
                         navController.navigate("chat_room")
                     },
-                    onNavigateBack = { navController.popBackStack() },
-                    onNavigateToDM = { navController.navigate("direct_messages") }
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
         }
@@ -306,15 +285,7 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
 
         composable("profile") {
             MainScreen(navController = navController) {
-                ProfileScreen(
-                    onBack = { navController.popBackStack() },
-                    onLogout = {
-                        tokenAuthManager.logout()
-                        navController.navigate("login") {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    }
-                )
+                ProfileScreen(onBack = { navController.popBackStack() })
             }
         }
 
