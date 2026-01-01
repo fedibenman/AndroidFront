@@ -22,7 +22,7 @@ import androidx.navigation.navArgument
 import com.example.myapplication.chat.ui.ChatListScreen
 import com.example.myapplication.chat.ui.ChatScreen
 import com.example.myapplication.chat.viewmodel.ChatViewModel
-import com.example.myapplication.community.ui.screens.CommunityScreen
+import com.example.myapplication.community.ui.screens.*
 import com.example.myapplication.community.viewmodel.PostViewModel
 import com.example.myapplication.ui.auth.*
 import com.example.myapplication.ui.components.MainBottomNavigationBar
@@ -30,6 +30,7 @@ import com.example.myapplication.ui.theme.LocalThemeManager
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.example.myapplication.ui.theme.ThemeManager
 import com.example.myapplication.viewModel.AiConversationViewModel
+import com.example.myapplication.ui.ChatPage
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -270,14 +271,18 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                         if (userId.isBlank()) {
                             android.util.Log.e("MainActivity", "userId is blank, cannot start conversation")
                         } else {
-                            android.util.Log.d("MainActivity", "Starting conversation between $userId and ${user._id}")
-                            dmViewModel.startConversation(userId, user._id) { conversation ->
+                            if (user._id.isNullOrBlank()) {
+                                android.util.Log.e("MainActivity", "Target user ID is null or blank")
+                            } else {
+                                android.util.Log.d("MainActivity", "Starting conversation between $userId and ${user._id}")
+                                dmViewModel.startConversation(userId, user._id) { conversation ->
                                 android.util.Log.d("MainActivity", "Conversation started successfully: ${conversation._id}")
                                 android.util.Log.d("MainActivity", "Navigating to direct_message_chat/${conversation._id}")
                                 navController.navigate("direct_message_chat/${conversation._id}") {
                                     popUpTo("direct_messages") { inclusive = false }
                                 }
                             }
+                        }
                         }
                     },
                     onNavigateBack = { navController.popBackStack() }
@@ -319,44 +324,6 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
     }
 }
 
-@Composable
-fun LoginScreen(
-    viewModel: AuthViewModel,
-    onSignupRequested: () -> Unit,
-    onLoginSuccess: () -> Unit,
-    onForgotPassword: () -> Unit
-) {
-    TODO("Not yet implemented")
-}
-
-@Composable
-fun SignupScreen(viewModel: AuthViewModel, onBack: () -> Boolean, onSignupSuccess: () -> Boolean) {
-    TODO("Not yet implemented")
-}
-
-@Composable
-fun CreatePostScreen(
-    postViewModel: PostViewModel,
-    onBack: () -> Boolean,
-    onPostCreated: () -> Boolean
-) {
-    TODO("Not yet implemented")
-}
-
-@Composable
-fun EditPostScreen(
-    postId: String,
-    postViewModel: PostViewModel,
-    onBack: () -> Boolean,
-    onUpdated: () -> Boolean
-) {
-    TODO("Not yet implemented")
-}
-
-@Composable
-fun ChatPage(viewModel: AiConversationViewModel) {
-    TODO("Not yet implemented")
-}
 
 @Composable
 fun MainScreen(navController: NavHostController, content: @Composable () -> Unit) {

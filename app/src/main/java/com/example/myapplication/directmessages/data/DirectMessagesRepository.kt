@@ -150,6 +150,15 @@ class DirectMessagesRepository private constructor() {
             emptyList()
         }
     }
+
+    suspend fun getAllUsers(): List<com.example.myapplication.directmessages.model.User> {
+        return try {
+            api.getAllUsers()
+        } catch (e: Exception) {
+            Log.e("DirectMessagesRepo", "Error getting all users", e)
+            emptyList()
+        }
+    }
     
     suspend fun startConversation(user1Id: String, user2Id: String): Conversation? {
         return try {
@@ -187,14 +196,7 @@ class DirectMessagesRepository private constructor() {
         socket?.emit("send-direct-message", data)
     }
     
-    suspend fun getAllUsers(): List<com.example.myapplication.directmessages.model.User> {
-        return try {
-            api.getAllUsers()
-        } catch (e: Exception) {
-            Log.e("DirectMessagesRepo", "Error getting users", e)
-            emptyList()
-        }
-    }
+
     
     // ========== VOICE CALL METHODS ==========
     
