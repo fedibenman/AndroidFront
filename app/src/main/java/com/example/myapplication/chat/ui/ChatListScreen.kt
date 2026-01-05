@@ -13,6 +13,7 @@ import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.chat.model.ChatRoom
 import com.example.myapplication.chat.viewmodel.ChatViewModel
+import com.example.myapplication.directmessages.viewmodel.DirectMessagesViewModel
+import com.example.myapplication.directmessages.model.Conversation
 import com.example.myapplication.ui.theme.PressStart
 
 import com.example.myapplication.ui.theme.PixelBlack
@@ -34,11 +37,16 @@ import com.example.myapplication.ui.theme.PixelWhite
 @Composable
 fun ChatListScreen(
     viewModel: ChatViewModel,
+    dmViewModel: DirectMessagesViewModel,
+    currentUserId: String,
     onRoomClick: (ChatRoom) -> Unit,
+    onConversationClick: (Conversation) -> Unit,
     onNavigateBack: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val rooms by viewModel.rooms.collectAsState()
+    val conversations by dmViewModel.conversations.collectAsState()
+    var selectedTab by remember { mutableStateOf(0) } // 0 for Rooms, 1 for DMs
     var showCreateDialog by remember { mutableStateOf(false) }
 
     if (showCreateDialog) {
@@ -94,15 +102,105 @@ fun ChatListScreen(
                 )
             }
 
-            // Room list
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(rooms) { room ->
-                    RoomItem(
-                        room = room,
-                        onClick = { onRoomClick(room) }
+            // Tab Switcher
+            TabRow(
+                selectedTabIndex = selectedTab,
+                containerColor = PixelWhite,
+                contentColor = PixelBlue,
+                divider = { HorizontalDivider(thickness = 4.dp, color = PixelBlack) },
+                indicator = { tabPositions ->
+                    TabRowDefaults.SecondaryIndicator(
+                        Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                        color = PixelBlue,
+                        height = 4.dp
                     )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp)
+                    .border(4.dp, PixelBlack)
+            ) {
+                Tab(
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0 },
+                    text = {
+                        Text(
+                            "ROOMS",
+                            fontFamily = PressStart,
+                            fontSize = 12.sp,
+                            fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                )
+                Tab(
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 },
+                    text = {
+                        Text(
+                            "DMs",
+                            fontFamily = PressStart,
+                            fontSize = 12.sp,
+                            fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                )
+            }
+
+            // List Content
+            if (selectedTab == 0) {
+                // Room list
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    items(rooms) { room ->
+                        RoomItem(
+                            room = room,
+                            onClick = { onRoomClick(room) }
+                        )
+                    }
+                }
+            } else {
+                // DM list
+                if (conversations.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize().weight(1f), contentAlignment = Alignment.Center) {
+                        Text("NO DMs YET", fontFamily = PressStart, fontSize = 12.sp)
+                    }
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        items(conversations) { conversation ->
+                            val otherUser = conversation.participants.find { it._id != currentUserId }
+                                ?: conversation.participants.firstOrNull()
+                                
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .border(4.dp, PixelBlack)
+                                    .background(PixelWhite)
+                                    .clickable { onConversationClick(conversation) }
+                                    .padding(16.dp)
+                            ) {
+                                Column {
+                                    Text(
+                                        text = otherUser?.name ?: "UNKNOWN",
+                                        fontFamily = PressStart,
+                                        fontSize = 14.sp,
+                                        color = PixelBlue
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = conversation.lastMessage?.content ?: "No messages",
+                                        fontSize = 12.sp,
+                                        maxLines = 1,
+                                        color = PixelBlack
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

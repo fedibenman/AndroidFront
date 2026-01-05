@@ -109,8 +109,8 @@ class CallActivity : AppCompatActivity() {
     }
 
     private fun addCallFragment(userID: String, userName: String, callID: String) {
-        val appID: Long = 1060413186 
-        val appSign = "96dfce239aee51e875821e2117adaeb76d48d2d610587167d0be4f9d711ad8eb"
+        val appID: Long = 1081952728 
+        val appSign = "c416f40482159b1d4ed83f0de382354ae00ddbb2f611ee9d2c641b135855369f"
 
         val config = ZegoUIKitPrebuiltCallConfig.groupVoiceCall()
 

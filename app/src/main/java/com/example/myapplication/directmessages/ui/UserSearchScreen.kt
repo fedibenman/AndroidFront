@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myapplication.directmessages.model.User
-import com.example.myapplication.community.viewmodel.UserViewModel
+import com.example.myapplication.directmessages.viewmodel.DirectMessagesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,12 +34,12 @@ fun UserSearchScreen(
     // As per previous context, let's use a mock or basic implementation 
     // integrating with Comunity feature's User model
     
-    val userViewModel: UserViewModel = viewModel()
-    val users by userViewModel.users.collectAsState()
+    val dmViewModel: DirectMessagesViewModel = viewModel()
+    val users by dmViewModel.users.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
-        userViewModel.loadUsers()
+        dmViewModel.loadUsers()
     }
 
     val filteredUsers = users.toList().filter { 

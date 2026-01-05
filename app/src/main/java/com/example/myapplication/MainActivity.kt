@@ -13,7 +13,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
+import org.json.JSONObject
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -33,6 +35,11 @@ import com.example.myapplication.storyCreator.ViewModel.CommunityProjectViewMode
 import com.example.myapplication.storyCreator.ViewModel.StoryProjectViewModel
 import com.example.myapplication.storyCreator.Views.FlowBuilderScreen
 import com.example.myapplication.storyCreator.Views.ProjectsMainScreen
+import com.example.myapplication.directmessages.viewmodel.DirectMessagesViewModel
+import com.example.myapplication.directmessages.ui.DirectMessageScreen
+import com.example.myapplication.calls.IncomingCallActivity
+import android.content.Intent
+import androidx.compose.runtime.collectAsState
 import com.example.myapplication.ui.auth.AuthViewModel
 import com.example.myapplication.ui.auth.ChatPage
 import com.example.myapplication.ui.auth.CodeInputScreen
@@ -82,6 +89,8 @@ fun AppNavHost(
     val chatViewModel: ChatViewModel = viewModel()
     val storyProjectViewModel: StoryProjectViewModel = viewModel()
     val communityProjectViewModel: CommunityProjectViewModel = viewModel()
+    val dmViewModel: DirectMessagesViewModel = viewModel()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     // Auto-navigate based on token
     LaunchedEffect(Unit) {
@@ -100,8 +109,36 @@ fun AppNavHost(
 
     // Sync current user with projects
     LaunchedEffect(tokenAuthManager.currentUser.value) {
-        val id = tokenAuthManager.currentUser.value?.id
-        communityProjectViewModel.setCurrentUserId(id)
+        val user = tokenAuthManager.currentUser.value
+        communityProjectViewModel.setCurrentUserId(user?.id)
+        
+        // Listen for incoming calls once logged in
+        user?.id?.let { userId ->
+            dmViewModel.listenForIncomingCalls(userId)
+            dmViewModel.loadConversations(userId)
+        }
+    }
+
+    // Global Call Listener
+    val incomingCall by dmViewModel.incomingCall.collectAsState()
+    LaunchedEffect(incomingCall) {
+        incomingCall?.let { call ->
+            val callJson = JSONObject().apply {
+                put("callId", call.callId)
+                put("callerId", call.callerId)
+                put("callerName", call.callerName)
+                put("calleeId", call.calleeId)
+                put("calleeName", call.calleeName)
+                put("conversationId", call.conversationId)
+                put("timestamp", call.timestamp)
+            }.toString()
+
+            val intent = Intent(context, IncomingCallActivity::class.java).apply {
+                putExtra("callRequest", callJson)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+            context.startActivity(intent)
+        }
     }
 
     NavHost(navController = navController, startDestination = "login") {
@@ -161,7 +198,17 @@ fun AppNavHost(
                     onEditPost = { post -> navController.navigate("edit_post/${post._id}") },
                     onDeletePost = { post -> post._id?.let { postViewModel.deletePost(it) {} } },
                     onNavigateToChat = { navController.navigate("chat_rooms") },
-                    onNavigateToNotifications = { navController.navigate("notifications") }
+                    onNavigateToNotifications = { navController.navigate("notifications") },
+                    onNavigateToDM = { user ->
+                        val currentUserId = tokenAuthManager.currentUser.value?.id ?: ""
+                        val targetUserId = user._id ?: ""
+                        if (currentUserId.isNotEmpty() && targetUserId.isNotEmpty()) {
+                            dmViewModel.startConversation(currentUserId, targetUserId) { conversation ->
+                                dmViewModel.selectConversation(conversation)
+                                navController.navigate("direct_message/${conversation._id}")
+                            }
+                        }
+                    }
                 )
             }
         }
@@ -237,14 +284,43 @@ fun AppNavHost(
         }
 
         composable("chat_rooms") {
-            LaunchedEffect(Unit) { chatViewModel.loadRooms() }
+            val user = tokenAuthManager.currentUser.value
+            LaunchedEffect(Unit) { 
+                chatViewModel.loadRooms() 
+                user?.id?.let { dmViewModel.loadConversations(it) }
+            }
             MainScreen(navController) {
                 ChatListScreen(
                     viewModel = chatViewModel,
+                    dmViewModel = dmViewModel,
+                    currentUserId = user?.id ?: "",
                     onRoomClick = { room ->
                         chatViewModel.selectRoom(room)
                         navController.navigate("chat_room")
                     },
+                    onConversationClick = { conversation ->
+                        dmViewModel.selectConversation(conversation)
+                        navController.navigate("direct_message/${conversation._id}")
+                    },
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+        }
+
+        composable(
+            "direct_message/{conversationId}",
+            arguments = listOf(navArgument("conversationId") { type = NavType.StringType })
+        ) { entry ->
+            val conversationId = entry.arguments?.getString("conversationId") ?: return@composable
+            val user = tokenAuthManager.currentUser.value
+            LaunchedEffect(conversationId) {
+                user?.id?.let { dmViewModel.loadConversationById(conversationId, it) }
+            }
+            MainScreen(navController) {
+                DirectMessageScreen(
+                    viewModel = dmViewModel,
+                    userId = user?.id ?: "",
+                    currentUserName = user?.name ?: "Me",
                     onNavigateBack = { navController.popBackStack() }
                 )
             }

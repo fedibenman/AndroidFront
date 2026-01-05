@@ -21,6 +21,9 @@ class DirectMessagesViewModel : ViewModel() {
     private val _currentConversation = MutableStateFlow<Conversation?>(null)
     val currentConversation: StateFlow<Conversation?> = _currentConversation
     
+    private val _users = MutableStateFlow<List<com.example.myapplication.directmessages.model.User>>(emptyList())
+    val users: StateFlow<List<com.example.myapplication.directmessages.model.User>> = _users
+    
     val typingUser = repository.typingUser
     
     val incomingCall = repository.incomingCall
@@ -143,6 +146,12 @@ class DirectMessagesViewModel : ViewModel() {
     
     fun sendTyping(conversationId: String, userName: String) {
         repository.sendTyping(conversationId, userName)
+    }
+
+    fun loadUsers() {
+        viewModelScope.launch {
+            _users.value = repository.getAllUsers()
+        }
     }
     
     override fun onCleared() {

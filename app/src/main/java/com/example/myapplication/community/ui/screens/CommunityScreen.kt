@@ -70,7 +70,8 @@ fun CommunityScreen(
     onEditPost: (Post) -> Unit,
     onDeletePost: (Post) -> Unit,
     onNavigateToChat: () -> Unit = {},
-    onNavigateToNotifications: () -> Unit = {}
+    onNavigateToNotifications: () -> Unit = {},
+    onNavigateToDM: (com.example.myapplication.community.model.User) -> Unit = {}
 ) {
     val posts by postViewModel.posts.collectAsState()
     val notifications by postViewModel.notifications.collectAsState()
@@ -155,6 +156,7 @@ fun CommunityScreen(
                         onDelete = { onDeletePost(post) },
                         onReact = { emoji -> post._id?.let { postViewModel.reactToPost(it, emoji) } },
                         onReply = { comment -> postViewModel.setReplyTarget(comment) },
+                        onMessageAuthor = { post.author?.let { onNavigateToDM(it) } },
                         replyingToComment = replyingToComment
                     )
                 }
@@ -322,6 +324,7 @@ fun PostItem(
     onDelete: () -> Unit,
     onReact: (String) -> Unit,
     onReply: (Comment) -> Unit,
+    onMessageAuthor: () -> Unit,
     replyingToComment: Comment?
 ) {
     var commentText by remember { mutableStateOf("") }
@@ -427,7 +430,8 @@ fun PostItem(
                             text = "u/${post.author?.name ?: "Unknown"}",
                             fontFamily = PressStart,
                             fontSize = 10.sp,
-                            color = PixelGray
+                            color = PixelGray,
+                            modifier = Modifier.clickable { onMessageAuthor() }
                         )
                         Text(
                             text = " • 2h", // Mock time
