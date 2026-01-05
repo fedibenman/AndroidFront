@@ -295,7 +295,6 @@ class DirectMessagesRepository private constructor() {
                 }
             }
         }
-
         // Listen for call cancelled (user-specific)
         socket?.on("call-cancelled-$userId") { args ->
             if (args.isNotEmpty()) {

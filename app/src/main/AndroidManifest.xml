@@ -16,6 +16,12 @@
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     
     <!-- Declare audio features -->
     <uses-feature android:name="android.hardware.microphone" android:required="true" />
@@ -63,6 +69,21 @@
                 <action android:name="com.example.myapplication.ACTION_DECLINE_CALL" />
             </intent-filter>
         </receiver>
+
+    <!-- Incoming Call Screen -->
+    <activity
+        android:name=".calls.IncomingCallActivity"
+        android:exported="false"
+        android:excludeFromRecents="true"
+        android:launchMode="singleTask"
+        android:showWhenLocked="true"
+        android:turnScreenOn="true"
+        android:theme="@style/Theme.MyApplication" />
+
+    <!-- Call Action Receiver -->
+    <receiver
+        android:name=".calls.CallActionReceiver"
+        android:exported="false" />
 
     </application>
 

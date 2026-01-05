@@ -33,7 +33,6 @@ class DirectMessagesViewModel : ViewModel() {
     fun listenForIncomingCalls(userId: String) {
         repository.listenForIncomingCalls(userId)
     }
-    
     fun loadConversations(userId: String) {
         viewModelScope.launch {
             val result = repository.getConversations(userId)
@@ -147,7 +146,6 @@ class DirectMessagesViewModel : ViewModel() {
     fun sendTyping(conversationId: String, userName: String) {
         repository.sendTyping(conversationId, userName)
     }
-
     fun loadUsers() {
         viewModelScope.launch {
             _users.value = repository.getAllUsers()

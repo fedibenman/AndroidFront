@@ -149,6 +149,7 @@ fun CommunityScreen(
                 items(posts) { post ->
                     PostItem(
                         post = post,
+                        currentUserId = postViewModel.currentUserId.value ?: "",
                         onLike = { post._id?.let { postViewModel.likePost(it) } },
                         onDislike = { post._id?.let { postViewModel.dislikePost(it) } },
                         onAddComment = { text -> post._id?.let { postViewModel.addComment(it, text) } },
@@ -317,6 +318,7 @@ fun CommentWithReplies(
 @Composable
 fun PostItem(
     post: Post,
+    currentUserId: String,
     onLike: () -> Unit,
     onDislike: () -> Unit,
     onAddComment: (String) -> Unit,
@@ -364,7 +366,6 @@ fun PostItem(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
             ) {
-                val currentUserId = "69258d95573be880ade99495" // TODO: Get from auth
                 val hasUpvoted = post.likes?.contains(currentUserId) == true
                 val hasDownvoted = post.dislikes?.contains(currentUserId) == true
                 val voteCount = (post.likes?.size ?: 0) - (post.dislikes?.size ?: 0)

@@ -89,7 +89,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     
     fun sendMessage(content: String) {
         val room = _currentRoom.value ?: return
-        val userId = _currentUserId.value ?: "unknown"
+        val userId = _currentUserId.value
+        if (userId.isNullOrBlank()) {
+            Log.e("ChatViewModel", "Cannot send message: userId is null or blank")
+            return
+        }
         val userName = _currentUserName.value
         
         val replyTo = _replyingToMessage.value?.let {
@@ -118,7 +122,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     
     fun addReaction(messageId: String, emoji: String) {
         val room = _currentRoom.value ?: return
-        val userId = _currentUserId.value ?: return
+        val userId = _currentUserId.value
+        if (userId.isNullOrBlank()) {
+            Log.e("ChatViewModel", "Cannot add reaction: userId is null or blank")
+            return
+        }
         val userName = _currentUserName.value
         
         repository.addReaction(messageId, emoji, userId, userName, room._id)
@@ -126,7 +134,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     
     fun removeReaction(messageId: String, emoji: String) {
         val room = _currentRoom.value ?: return
-        val userId = _currentUserId.value ?: return
+        val userId = _currentUserId.value
+        if (userId.isNullOrBlank()) {
+            Log.e("ChatViewModel", "Cannot remove reaction: userId is null or blank")
+            return
+        }
         
         repository.removeReaction(messageId, emoji, userId, room._id)
     }
@@ -187,7 +199,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     fun sendAudio() {
         val file = _recordedAudioFile.value ?: return
         val room = _currentRoom.value ?: return
-        val userId = _currentUserId.value ?: "unknown"
+        val userId = _currentUserId.value
+        if (userId.isNullOrBlank()) {
+            Log.e("ChatViewModel", "Cannot send audio: userId is null or blank")
+            return
+        }
         val userName = _currentUserName.value
         
         viewModelScope.launch {

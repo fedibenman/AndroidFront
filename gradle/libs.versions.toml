@@ -15,11 +15,6 @@ foundation = "1.9.5"
 prebuiltCallAndroid = "3.9.10"
 retrofit = "3.0.0"
 socketIoClient = "2.1.2"
-foundationVersion = "1.10.0"
-foundationLayout = "1.10.0"
-animation = "1.10.0"
-animationCore = "1.10.0"
-navigationSafeArgsGenerator = "2.9.6"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -43,11 +38,6 @@ androidx-compose-foundation = { group = "androidx.compose.foundation", name = "f
 prebuilt-call-android = { module = "com.github.ZEGOCLOUD:zego_uikit_prebuilt_call_android", version.ref = "prebuiltCallAndroid" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 socket-io-client = { module = "io.socket:socket.io-client", version.ref = "socketIoClient" }
-androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundationVersion" }
-androidx-compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
-androidx-compose-animation = { group = "androidx.compose.animation", name = "animation", version.ref = "animation" }
-androidx-compose-animation-core = { group = "androidx.compose.animation", name = "animation-core", version.ref = "animationCore" }
-androidx-navigation-safe-args-generator = { group = "androidx.navigation", name = "navigation-safe-args-generator", version.ref = "navigationSafeArgsGenerator" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
