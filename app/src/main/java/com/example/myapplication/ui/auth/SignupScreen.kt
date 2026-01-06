@@ -1,12 +1,12 @@
 package com.example.myapplication.ui.auth
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,17 +30,11 @@ fun SignupScreen(
     onBack: () -> Unit,
     onSignupSuccess: () -> Unit
 ) {
-    // Local fields bound to viewModel to keep behavior
-    var name by viewModel::name
-    var email by viewModel::email
-    var password by viewModel::password
-    
-    val themeManager = LocalThemeManager.current
-    val isDarkMode = themeManager.isDarkMode
+    // Use ViewModel properties directly
+    var confirmPassword by remember { mutableStateOf("") }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
         // Background based on theme
         if (isDarkMode) {
@@ -80,23 +74,24 @@ fun SignupScreen(
         ) {
             // Title
             Text(
-                text = "Creation",
+                text = "CREATION",
                 style = TextStyle(
                     fontFamily = PressStart,
                     fontWeight = FontWeight.Normal,
-                    fontSize = 22.sp,
-                    color = if (isDarkMode) Color.White else Color.Black
+                    color = Color.Black,
+                    fontSize = 24.sp
                 ),
                 modifier = Modifier.padding(bottom = 4.dp)
             )
 
             // Subtitle
             Text(
-                text = "join the adventurers",
+                text = "create account",
                 style = TextStyle(
                     fontFamily = PressStart,
                     fontWeight = FontWeight.Normal,
-                    color = if (isDarkMode) Color.Gray else Color.Black
+                    color = Color.Black,
+                    fontSize = 12.sp
                 ),
                 modifier = Modifier.padding(bottom = 24.dp)
             )
@@ -107,14 +102,14 @@ fun SignupScreen(
                 style = TextStyle(
                     fontFamily = PressStart,
                     fontWeight = FontWeight.Normal,
-                    color = if (isDarkMode) Color.White else Color.Black
+                    color = Color.Black
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 4.dp, bottom = 4.dp)
             )
 
-            // Name input with same styled box
+            // Name input
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -128,9 +123,9 @@ fun SignupScreen(
                 )
 
                 BasicTextField(
-                    value = name,
+                    value = viewModel.name,
                     onValueChange = {
-                        name = it
+                        viewModel.name = it
                         viewModel.clearErrors()
                     },
                     singleLine = true,
@@ -140,13 +135,13 @@ fun SignupScreen(
                         fontWeight = FontWeight.Normal
                     ),
                     decorationBox = { innerTextField ->
-                        if (name.isEmpty()) {
+                        if (viewModel.name.isEmpty()) {
                             Text(
                                 text = "Enter your name",
                                 style = TextStyle(
-                                color = if (isDarkMode) Color.Gray else Color.DarkGray,
-                                fontFamily = PressStart,
-                                fontWeight = FontWeight.Normal
+                                    color = Color.DarkGray,
+                                    fontFamily = PressStart,
+                                    fontWeight = FontWeight.Normal
                                 )
                             )
                         }
@@ -156,18 +151,9 @@ fun SignupScreen(
                         .align(Alignment.CenterStart)
                         .padding(start = 24.dp, end = 24.dp)
                 )
-
-                Image(
-                    painter = painterResource(id = R.drawable.user),
-                    contentDescription = "User Icon",
-                    modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .padding(end = 16.dp)
-                        .size(30.dp)
-                )
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Email label
             Text(
@@ -175,7 +161,7 @@ fun SignupScreen(
                 style = TextStyle(
                     fontFamily = PressStart,
                     fontWeight = FontWeight.Normal,
-                    color = if (isDarkMode) Color.White else Color.Black
+                    color = Color.Black
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -196,9 +182,9 @@ fun SignupScreen(
                 )
 
                 BasicTextField(
-                    value = email,
+                    value = viewModel.email,
                     onValueChange = {
-                        email = it
+                        viewModel.email = it
                         viewModel.clearErrors()
                     },
                     singleLine = true,
@@ -208,13 +194,13 @@ fun SignupScreen(
                         fontWeight = FontWeight.Normal
                     ),
                     decorationBox = { innerTextField ->
-                        if (email.isEmpty()) {
+                        if (viewModel.email.isEmpty()) {
                             Text(
                                 text = "Enter your email",
                                 style = TextStyle(
-                                color = if (isDarkMode) Color.Gray else Color.DarkGray,
-                                fontFamily = PressStart,
-                                fontWeight = FontWeight.Normal
+                                    color = Color.DarkGray,
+                                    fontFamily = PressStart,
+                                    fontWeight = FontWeight.Normal
                                 )
                             )
                         }
@@ -222,8 +208,9 @@ fun SignupScreen(
                     },
                     modifier = Modifier
                         .align(Alignment.CenterStart)
-                        .padding(start = 24.dp, end = 24.dp)
+                        .padding(start = 24.dp, end = 56.dp)
                 )
+
                 Image(
                     painter = painterResource(id = R.drawable.globe),
                     contentDescription = "Email Icon",
@@ -234,7 +221,7 @@ fun SignupScreen(
                 )
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Password label
             Text(
@@ -242,7 +229,7 @@ fun SignupScreen(
                 style = TextStyle(
                     fontFamily = PressStart,
                     fontWeight = FontWeight.Normal,
-                    color = if (isDarkMode) Color.White else Color.Black
+                    color = Color.Black
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -251,70 +238,92 @@ fun SignupScreen(
 
             // Password input
             PasswordTextField(
-                value = password,
+                value = viewModel.password,
                 onValueChange = {
-                    password = it
+                    viewModel.password = it
                     viewModel.clearErrors()
                 },
                 isError = false,
-                modifier = Modifier.fillMaxWidth(),
-                Placeholder = "Enter Password"
+                Placeholder = "Enter Password",
+                modifier = Modifier.fillMaxWidth()
             )
-            Spacer(Modifier.height(12.dp))
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Confirm Password label
             Text(
                 text = "CONFIRM PASSWORD",
                 style = TextStyle(
                     fontFamily = PressStart,
                     fontWeight = FontWeight.Normal,
-                    color = if (isDarkMode) Color.White else Color.Black
+                    color = Color.Black
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 4.dp, bottom = 4.dp)
             )
+
+            // Confirm Password input
             PasswordTextField(
-                value = password,
+                value = confirmPassword,
                 onValueChange = {
-                    password = it
+                    confirmPassword = it
                     viewModel.clearErrors()
                 },
                 isError = false,
-                modifier = Modifier.fillMaxWidth(),
-                Placeholder = "Confirm Password"
+                Placeholder = "Confirm Password",
+                modifier = Modifier.fillMaxWidth()
             )
-            Spacer(Modifier.height(12.dp))
 
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Error message
             if (viewModel.generalError != null) {
                 Text(
                     text = viewModel.generalError ?: "",
                     color = Color.Red,
                     style = TextStyle(
                         fontFamily = PressStart,
-                        fontWeight = FontWeight.Normal
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 10.sp
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 4.dp, top = 4.dp)
                 )
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
-            Spacer(Modifier.height(16.dp))
+            // Loading indicator
+            if (viewModel.isLoading) {
+                CircularProgressIndicator()
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
-            // Signup button styled like login
+            // Signup button
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(70.dp)
+                    .clickable {
+                        if (viewModel.password == confirmPassword) {
+                            viewModel.signup { success ->
+                                if (success) onSignupSuccess()
+                            }
+                        } else {
+                            viewModel.generalError = "Passwords do not match"
+                        }
+                    }
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.button),
-                    contentDescription = "Signup Button",
+                    contentDescription = "Sign Up",
                     modifier = Modifier.matchParentSize(),
                     contentScale = ContentScale.FillBounds
                 )
 
                 Text(
-                    text = "CREATE ACCOUNT",
+                    text = "SIGN UP",
                     style = TextStyle(
                         fontFamily = PressStart,
                         fontWeight = FontWeight.Normal,
@@ -325,58 +334,45 @@ fun SignupScreen(
                 )
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            if (!viewModel.isLoading) {
-                // Wrap click in TextButton style while preserving look
-                TextButton(
-                    onClick = {
-                        viewModel.signup { success ->
-                            if (success) onSignupSuccess()
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) { }
-            } else {
-                CircularProgressIndicator()
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            TextButton(onClick = onBack) {
+            // Back to login link
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text(
-                    text = "back to login",
+                    text = "have an account? ",
                     style = TextStyle(
                         fontFamily = PressStart,
                         fontWeight = FontWeight.Normal,
-                        color = if (isDarkMode) Color.White else Color.Black
+                        color = Color.Black,
+                        fontSize = 10.sp
                     )
                 )
+                Text(
+                    text = "login",
+                    style = TextStyle(
+                        fontFamily = PressStart,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Blue,
+                        fontSize = 10.sp
+                    ),
+                    modifier = Modifier.clickable { onBack() }
+                )
             }
+        }
     }
 }
-}
-
-
 
 @Preview(showBackground = true)
 @Composable
-fun SignUpScreenPreview() {
-    // Mock ThemeManager for preview
-    val mockThemeManager = object {
-        val isDarkMode = false
-        fun toggleTheme() {}
-    }
-    
-    androidx.compose.runtime.CompositionLocalProvider(
-        LocalThemeManager provides mockThemeManager as com.example.myapplication.ui.theme.ThemeManager
-    ) {
-        MyApplicationTheme {
-            SignupScreen(
-                viewModel = AuthViewModel(),
-                onBack = {},
-                onSignupSuccess = {}
-            )
-        }
+fun SignupScreenPreview() {
+    MyApplicationTheme {
+        SignupScreen(
+            viewModel = AuthViewModel(),
+            onBack = {},
+            onSignupSuccess = {}
+        )
     }
 }

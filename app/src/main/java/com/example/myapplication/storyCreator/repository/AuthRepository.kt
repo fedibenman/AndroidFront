@@ -1,22 +1,17 @@
 package com.example.myapplication.storyCreator.repository
 
 import LoginResponse
-import android.util.Log
 import com.example.myapplication.DTOs.Profile
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import android.util.Log
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.request.get
-import io.ktor.client.request.header
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
-import io.ktor.serialization.kotlinx.json.json
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.net.ConnectException
@@ -78,6 +73,7 @@ class KtorAuthRepository : AuthRepository {
             // When running on Android emulator, use 10.0.2.2 to reach host machine's localhost.
             // Ensure your Nest API is running on the host at port 3000.
             url("http://192.168.68.182:3001/")
+
 
             contentType(ContentType.Application.Json)
         }

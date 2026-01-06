@@ -39,9 +39,15 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
 
     private val fallbackUserId = "674a0f6bcd2c94b2d0b72f1a"
 
+    private val _currentUserId = MutableStateFlow<String?>(null)
+    val currentUserId: StateFlow<String?> = _currentUserId.asStateFlow()
+
     init {
         loadPosts()
         initNotifications()
+        viewModelScope.launch {
+            _currentUserId.value = getCurrentUserId()
+        }
     }
 
     private fun initNotifications() {

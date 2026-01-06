@@ -1,14 +1,20 @@
 package com.example.myapplication.ui.auth
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -30,39 +36,18 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onForgotPassword: () -> Unit
 ) {
-    val themeManager = LocalThemeManager.current
-    val isDarkMode = themeManager.isDarkMode
-    
+    // Use ViewModel properties directly
+
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Background based on theme
-        if (isDarkMode) {
-            // Dark theme background using background_dark image
-            Image(
-                painter = painterResource(id = R.drawable.background_dark),
-                contentDescription = "Dark Background",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.matchParentSize()
-            )
-        } else {
-            // Light theme background
-            Image(
-                painter = painterResource(id = R.drawable.background_general),
-                contentDescription = "Background",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.matchParentSize()
-            )
-        }
-        
-        // Theme toggle button at top right
-        Box(
-            modifier = Modifier
-                .padding(top = 50.dp, end = 20.dp)
-                .align(Alignment.TopEnd)
-        ) {
-            AnimatedThemeToggle()
-        }
+        // Background image
+        Image(
+            painter = painterResource(id = R.drawable.background_general),
+            contentDescription = "Background",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.matchParentSize()
+        )
 
         Column(
             modifier = Modifier
@@ -72,203 +57,222 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             // Title
             Text(
-                text = "Login",
+                text = "CREATION",
                 style = TextStyle(
                     fontFamily = PressStart,
                     fontWeight = FontWeight.Normal,
-                    color = if (isDarkMode) Color.White else Color.Black,
-                    fontSize = 22.sp
+                    color = Color.Black,
+                    fontSize = 24.sp
                 ),
                 modifier = Modifier.padding(bottom = 4.dp)
             )
 
             // Subtitle
             Text(
-                text = "enter the realm",
+                text = "welcome back",
                 style = TextStyle(
                     fontFamily = PressStart,
                     fontWeight = FontWeight.Normal,
-                    color = if (isDarkMode) Color.Gray else Color.Black
+                    color = Color.Black,
+                    fontSize = 12.sp
                 ),
                 modifier = Modifier.padding(bottom = 24.dp)
             )
 
-            // Display general error
-            viewModel.generalError?.let { error ->
-                Text(
-                    text = error,
-                    color = Color.Red,
-                    style = TextStyle(fontFamily = PressStart),
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-            }
-
             // Email label
             Text(
                 text = "EMAIL",
-                style = TextStyle(fontFamily = PressStart, fontWeight = FontWeight.Normal, color = if (isDarkMode) Color.White else Color.Black),
-                modifier = Modifier.fillMaxWidth().padding(start = 4.dp, bottom = 4.dp)
+                style = TextStyle(
+                    fontFamily = PressStart,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.Black
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 4.dp, bottom = 4.dp)
             )
 
-            // Email input with background
-            Box(modifier = Modifier.fillMaxWidth().height(60.dp)) {
+            // Email input
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp)
+            ) {
                 Image(
-                    painter = painterResource(
-                        id = if (viewModel.emailError != null) R.drawable.input_error else R.drawable.input
-                    ),
-                    contentDescription = null,
+                    painter = painterResource(id = R.drawable.input),
+                    contentDescription = "Email Input Background",
                     modifier = Modifier.matchParentSize(),
                     contentScale = ContentScale.FillBounds
                 )
 
                 BasicTextField(
                     value = viewModel.email,
-                    onValueChange = { viewModel.email = it; viewModel.emailError = null },
+                    onValueChange = {
+                        viewModel.email = it
+                        viewModel.clearErrors()
+                    },
                     singleLine = true,
-                    textStyle = TextStyle(color = Color.Black, fontFamily = PressStart),
+                    textStyle = TextStyle(
+                        color = Color.Black,
+                        fontFamily = PressStart,
+                        fontWeight = FontWeight.Normal
+                    ),
                     decorationBox = { innerTextField ->
                         if (viewModel.email.isEmpty()) {
                             Text(
                                 text = "Enter your email",
-                                style = TextStyle(color = if (isDarkMode) Color.Gray else Color.DarkGray, fontFamily = PressStart)
+                                style = TextStyle(
+                                    color = Color.DarkGray,
+                                    fontFamily = PressStart,
+                                    fontWeight = FontWeight.Normal
+                                )
                             )
                         }
                         innerTextField()
                     },
-                    modifier = Modifier.align(Alignment.CenterStart).padding(start = 24.dp, end = 24.dp)
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .padding(start = 24.dp, end = 56.dp)
                 )
 
                 Image(
                     painter = painterResource(id = R.drawable.globe),
                     contentDescription = "Email Icon",
-                    modifier = Modifier.align(Alignment.CenterEnd).padding(end = 16.dp).size(30.dp)
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .padding(end = 16.dp)
+                        .size(30.dp)
                 )
             }
 
-            viewModel.emailError?.let { error ->
-                Text(
-                    text = error,
-                    color = Color.Red,
-                    style = TextStyle(fontFamily = PressStart),
-                    modifier = Modifier.fillMaxWidth().padding(start = 4.dp, top = 4.dp)
-                )
-            }
-
-            Spacer(Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Password label
             Text(
                 text = "PASSWORD",
-                style = TextStyle(fontFamily = PressStart, fontWeight = FontWeight.Normal, color = if (isDarkMode) Color.White else Color.Black),
-                modifier = Modifier.fillMaxWidth().padding(start = 4.dp, bottom = 4.dp)
+                style = TextStyle(
+                    fontFamily = PressStart,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.Black
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 4.dp, bottom = 4.dp)
             )
 
+            // Password input
             PasswordTextField(
                 value = viewModel.password,
-                onValueChange = { viewModel.password = it; viewModel.passwordError = null },
-                Placeholder = "Enter your password",
-                isError = viewModel.passwordError != null,
+                onValueChange = {
+                    viewModel.password = it
+                    viewModel.clearErrors()
+                },
+                isError = false,
+                Placeholder = "Enter Password",
                 modifier = Modifier.fillMaxWidth()
             )
 
-            viewModel.passwordError?.let { error ->
-                Text(
-                    text = error,
-                    color = Color.Red,
-                    style = TextStyle(fontFamily = PressStart),
-                    modifier = Modifier.fillMaxWidth().padding(start = 4.dp, top = 4.dp)
-                )
-            }
+            Spacer(modifier = Modifier.height(8.dp))
 
-            // Forgot password
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                TextButton(onClick = onForgotPassword) {
-                    Text(
-                        "forgot password?",
-                        style = TextStyle(fontFamily = PressStart, color = Color.Red)
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            // Remember me checkbox
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Start
+            // Forgot password link
+            TextButton(
+                onClick = onForgotPassword,
+                modifier = Modifier.align(Alignment.End)
             ) {
-                Checkbox(
-                    checked = viewModel.rememberMe,
-                    onCheckedChange = { viewModel.rememberMe = it }
-                )
                 Text(
-                    text = "Remember me",
+                    text = "forgot password?",
                     style = TextStyle(
                         fontFamily = PressStart,
                         fontWeight = FontWeight.Normal,
-                        color = if (isDarkMode) Color.White else Color.Black,
-                        fontSize = 16.sp
-                    ),
-                    modifier = Modifier.padding(start = 8.dp)
+                        color = Color.Black,
+                        fontSize = 10.sp
+                    )
                 )
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Error message
+            if (viewModel.generalError != null) {
+                Text(
+                    text = viewModel.generalError ?: "",
+                    color = Color.Red,
+                    style = TextStyle(
+                        fontFamily = PressStart,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 10.sp
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 4.dp, top = 4.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            // Loading indicator
+            if (viewModel.isLoading) {
+                CircularProgressIndicator()
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
             // Login button
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(70.dp)
-                    .clickable(enabled = !viewModel.isLoading) {
-                        viewModel.login(viewModel.rememberMe) { success ->
+                    .clickable {
+                        viewModel.login(rememberMeParam = false) { success ->
                             if (success) onLoginSuccess()
                         }
                     }
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.button),
-                    contentDescription = null,
+                    contentDescription = "Login",
                     modifier = Modifier.matchParentSize(),
                     contentScale = ContentScale.FillBounds
                 )
 
-                if (viewModel.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
+                Text(
+                    text = "LOGIN",
+                    style = TextStyle(
+                        fontFamily = PressStart,
+                        fontWeight = FontWeight.Normal,
                         color = Color.White,
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text(
-                        text = "LOGIN",
-                        style = TextStyle(fontFamily = PressStart, color = Color.White),
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
+                        fontSize = 14.sp
+                    ),
+                    modifier = Modifier.align(Alignment.Center)
+                )
             }
-            Spacer(Modifier.height(24.dp))
 
-            // Signup prompt
-            Column(
-                modifier = Modifier.padding(top = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Signup link
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "New adventurer?",
-                    style = TextStyle(fontFamily = PressStart, color = if (isDarkMode) Color.White else Color.Black)
-                )
-                
-                TextButton(onClick = onSignupRequested) {
-                    Text(
-                        text = "CREATE ACCOUNT",
-                        style = TextStyle(fontFamily = PressStart, fontSize = 18.sp, color = Color.Yellow)
+                    text = "new user? ",
+                    style = TextStyle(
+                        fontFamily = PressStart,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.Black,
+                        fontSize = 10.sp
                     )
-                }
+                )
+                Text(
+                    text = "sign up",
+                    style = TextStyle(
+                        fontFamily = PressStart,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Blue,
+                        fontSize = 10.sp
+                    ),
+                    modifier = Modifier.clickable { onSignupRequested() }
+                )
             }
         }
     }
@@ -277,22 +281,12 @@ fun LoginScreen(
 @Preview(showBackground = true)
 @Composable
 fun LoginScreenPreview() {
-    // Mock ThemeManager for preview
-    val mockThemeManager = object {
-        val isDarkMode = false
-        fun toggleTheme() {}
-    }
-    
-    androidx.compose.runtime.CompositionLocalProvider(
-        LocalThemeManager provides mockThemeManager as com.example.myapplication.ui.theme.ThemeManager
-    ) {
-        MyApplicationTheme {
-            LoginScreen(
-                viewModel = AuthViewModel(),
-                onSignupRequested = {},
-                onLoginSuccess = {},
-                onForgotPassword = {}
-            )
-        }
+    MyApplicationTheme {
+        LoginScreen(
+            viewModel = AuthViewModel(),
+            onSignupRequested = {},
+            onLoginSuccess = {},
+            onForgotPassword = {}
+        )
     }
 }
