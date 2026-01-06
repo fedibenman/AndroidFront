@@ -29,7 +29,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,28 +36,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import com.example.myapplication.storyCreator.ViewModel.StoryProjectViewModel
 import com.example.myapplication.storyCreator.model.ArtDimension
 import com.example.myapplication.storyCreator.model.ArtStyle
 import com.example.myapplication.storyCreator.model.ProjectArtStyle
 import com.example.myapplication.storyCreator.model.Reference
 import com.example.myapplication.storyCreator.model.ReferenceType
-import io.github.sceneview.Scene
-import io.github.sceneview.math.Position
-import io.github.sceneview.node.ModelNode
-import io.github.sceneview.rememberCameraManipulator
-import io.github.sceneview.rememberCameraNode
-import io.github.sceneview.rememberEngine
-import io.github.sceneview.rememberModelLoader
-import io.github.sceneview.rememberNodes
+import com.example.myapplication.ui.theme.LocalThemeManager
 
 @Composable
 fun ReferencesScreen(
@@ -72,6 +63,9 @@ fun ReferencesScreen(
     onUpdateReference: (Reference) -> Unit = {},
     onDeleteReference: (String) -> Unit = {}
 ) {
+    val themeManager = LocalThemeManager.current
+    val isDarkMode = themeManager.isDarkMode
+    
     var showStyleSelector by remember { mutableStateOf(projectArtStyle == null) }
     var showAddReferenceDialog by remember { mutableStateOf(false) }
     var editingReference by remember { mutableStateOf<Reference?>(null) }
@@ -79,8 +73,16 @@ fun ReferencesScreen(
     Box(
         Modifier
             .fillMaxSize()
-            .background(PixelMidBlue)
+            .background(if (isDarkMode) PixelMidBlue else Color(0xFFF0F0F0))
     ) {
+        // Theme toggle button at top right
+        Box(
+            modifier = Modifier
+                .padding(top = 50.dp, end = 20.dp)
+                .align(Alignment.TopEnd)
+        ) {
+            com.example.myapplication.ui.theme.AnimatedThemeToggle()
+        }
         if (isLoading) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -105,8 +107,8 @@ fun ReferencesScreen(
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .background(PixelDarkBlue)
-                        .border(3.dp, PixelHighlight)
+                        .background(if (isDarkMode) PixelDarkBlue else Color(0xFFE0E0E0))
+                        .border(3.dp, if (isDarkMode) PixelHighlight else Color(0xFF2196F3))
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -117,14 +119,14 @@ fun ReferencesScreen(
                             fontFamily = FontFamily.Monospace,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
-                            color = PixelGold,
+                            color = if (isDarkMode) PixelGold else Color(0xFF1976D2),
                             letterSpacing = 1.sp
                         )
                         Text(
                             "Style: ${projectArtStyle.dimension.name} - ${projectArtStyle.style.name.replace("_", " ")}",
                             fontFamily = FontFamily.Monospace,
                             fontSize = 11.sp,
-                            color = PixelCyan,
+                            color = if (isDarkMode) PixelCyan else Color(0xFF2196F3),
                             letterSpacing = 0.5.sp
                         )
                     }
@@ -155,8 +157,8 @@ fun ReferencesScreen(
                         Box(
                             Modifier
                                 .fillMaxWidth()
-                                .background(PixelDarkBlue)
-                                .border(2.dp, PixelAccent)
+                                .background(if (isDarkMode) PixelDarkBlue else Color(0xFFE8F4F8))
+                                .border(2.dp, if (isDarkMode) PixelAccent else Color(0xFF2196F3))
                                 .padding(32.dp),
                             contentAlignment = Alignment.Center
                         ) {
@@ -164,9 +166,10 @@ fun ReferencesScreen(
                                 "No references yet. Click 'Add Reference' to get started!",
                                 fontFamily = FontFamily.Monospace,
                                 fontSize = 12.sp,
-                                color = Color(0xFF666666),
+                                color = if (isDarkMode) Color(0xFF666666) else Color(0xFF666666),
                                 textAlign = TextAlign.Center
                             )
+
                         }
                     } else {
                         references.forEach { reference ->
@@ -331,79 +334,389 @@ fun Model3DViewer(
     ) {
         when {
             modelData.isNullOrEmpty() -> {
-                Text(
-                    "No 3D Model",
-                    fontSize = 12.sp,
-                    color = Color(0xFF666666),
-                    fontFamily = FontFamily.Monospace
-                )
+                // Replace placeholder handling with proper error messages for empty/null model data
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text("⚠️", fontSize = 48.sp)
+                    Text("No Model Data", fontSize = 12.sp, color = Color.Red, fontFamily = FontFamily.Monospace)
+                    Text("Model URL is empty or null", fontSize = 10.sp, color = Color(0xFF666666), fontFamily = FontFamily.Monospace)
+                }
             }
 
             modelData == "placeholder-3d-model-data" -> {
+                // Replace placeholder handling with proper error messages for placeholder data
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text("🎮", fontSize = 48.sp)
-                    Text("3D Model", fontSize = 12.sp, color = Color.Cyan, fontFamily = FontFamily.Monospace)
-                    Text("Generating...", fontSize = 10.sp, color = Color.Yellow, fontFamily = FontFamily.Monospace)
+                    Text("3D Model Unavailable", fontSize = 12.sp, color = Color.Red, fontFamily = FontFamily.Monospace)
+                    Text("Model generation failed or in progress", fontSize = 10.sp, color = Color(0xFF666666), fontFamily = FontFamily.Monospace)
                 }
             }
 
             else -> {
-                // Get context and lifecycle at composable level
-                val context = LocalContext.current
-                val lifecycle = LocalLifecycleOwner.current.lifecycle
-                
-                // Create engine and model loader
-                val engine = rememberEngine()
-                val modelLoader = rememberModelLoader(engine)
-                val cameraNode = rememberCameraNode(engine) {
-                    // Position camera to view the model
-                    position = Position(x = 0f, y = 0f, z = 4f)
+                // Replace localhost with the API base URL for proper network access
+                val finalModelUrl = if (modelData.contains("localhost")) {
+                    // Replace localhost with the actual API base URL
+                    modelData.replace("localhost:3001", com.example.myapplication.Repository.ApiClient.BASE_URL.removePrefix("http://"))
+                        .replace("localhost", com.example.myapplication.Repository.ApiClient.BASE_URL.removePrefix("http://"))
+                }else {
+                    modelData
                 }
                 
-                val modelNode = rememberNodes {
-                    // This will be populated when model loads
-                }
+                android.util.Log.d("Model3DViewer", "Original URL: $modelData")
+                android.util.Log.d("Model3DViewer", "Final URL: $finalModelUrl")
 
-                Scene(
-                    modifier = Modifier.fillMaxSize(),
-                    engine = engine,
-                    modelLoader = modelLoader,
-                    cameraNode = cameraNode,
-                    childNodes = modelNode,
-                    // Enable camera manipulation (pan, rotate, zoom)
-                    cameraManipulator = rememberCameraManipulator()
-                )
-                
-                // Load the model
-                LaunchedEffect(modelData) {
-                    try {
-                        // Load model from URL (Meshy.ai returns a GLB URL)
-                        // Download and load the GLB file
-                        val asset = modelLoader.loadModel(
-                            fileLocation = modelData
-                        )
-                        
-                        if (asset != null) {
-                            // Create instance from the asset
-                            val instance = modelLoader.createInstance(asset)
+                // Track if WebView has been initialized to prevent duplicate loading
+                var isWebViewInitialized by remember { mutableStateOf(false) }
+
+                AndroidView(
+                    factory = { context ->
+                        android.webkit.WebView(context).apply {
+                            settings.javaScriptEnabled = true
+                            settings.domStorageEnabled = true
+                            settings.allowFileAccess = true
+                            settings.allowContentAccess = true
                             
-                            if (instance != null) {
-                                val node = ModelNode(
-                                    modelInstance = instance,
-                                    scaleToUnits = 1.0f
-                                )
-                                modelNode.clear()
-                                modelNode.add(node)
+                            // Enhanced network and security settings for CDN access
+                            settings.allowUniversalAccessFromFileURLs = true
+                            settings.allowFileAccessFromFileURLs = true
+                            settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                            settings.cacheMode = android.webkit.WebSettings.LOAD_DEFAULT
+                            
+                            // Transparent background
+                            setBackgroundColor(0) 
+                            
+                            // Enhanced WebChromeClient to capture console logs
+                            webChromeClient = object : android.webkit.WebChromeClient() {
+                                override fun onConsoleMessage(consoleMessage: android.webkit.ConsoleMessage?): Boolean {
+                                    consoleMessage?.let { msg ->
+                                        val logLevel = when (msg.messageLevel()) {
+                                            android.webkit.ConsoleMessage.MessageLevel.ERROR -> "ERROR"
+                                            android.webkit.ConsoleMessage.MessageLevel.WARNING -> "WARN"
+                                            android.webkit.ConsoleMessage.MessageLevel.DEBUG -> "DEBUG"
+                                            else -> "INFO"
+                                        }
+                                        android.util.Log.d("Model3DViewer-JS", "[$logLevel] ${msg.message()} (${msg.sourceId()}:${msg.lineNumber()})")
+                                    }
+                                    return true
+                                }
+                            }
+                            
+                            // WebViewClient to capture page loading events
+                            webViewClient = object : android.webkit.WebViewClient() {
+                                override fun onPageStarted(view: android.webkit.WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+                                    super.onPageStarted(view, url, favicon)
+                                    android.util.Log.d("Model3DViewer", "Page loading started: $url")
+                                }
+                                
+                                override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
+                                    super.onPageFinished(view, url)
+                                    android.util.Log.d("Model3DViewer", "Page loading finished: $url")
+                                }
+                                
+                                override fun onReceivedError(view: android.webkit.WebView?, errorCode: Int, description: String?, failingUrl: String?) {
+                                    super.onReceivedError(view, errorCode, description, failingUrl)
+                                    android.util.Log.e("Model3DViewer", "WebView error: $errorCode - $description for URL: $failingUrl")
+                                }
                             }
                         }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }
+                    },
+                    update = { webView ->
+                        // Only load HTML content once to prevent duplicate model rendering
+                        if (!isWebViewInitialized) {
+                            val htmlContent = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+
+<title>3D Model Viewer</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 100vh;
+    background: #000;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+#container {
+    width: 100%;
+    height: 100%;
+    min-height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+#loading, #error {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: monospace;
+    z-index: 10;
+}
+
+#loading { color: cyan; }
+#error { color: red; display: none; }
+
+.spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid #333;
+    border-top: 3px solid cyan;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 10px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+</style>
+</head>
+
+<body>
+<div id="container"></div>
+
+<div id="loading">
+    <div class="spinner"></div>
+    <div>Loading 3D Model…</div>
+</div>
+
+<div id="error"></div>
+
+<script>
+/* ==========================================================
+   ONE-TIME STATE
+========================================================== */
+let initialized = false;
+let scene, camera, renderer, controls, model;
+
+/* ==========================================================
+   HELPERS
+========================================================== */
+function showError(msg) {
+    document.getElementById('loading').style.display = 'none';
+    const el = document.getElementById('error');
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+
+function hideLoading() {
+    document.getElementById('loading').style.display = 'none';
+}
+
+function loadScript(src) {
+    return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+    });
+}
+
+/* ==========================================================
+   LOAD LIBRARIES (SEQUENTIAL, SAFE)
+========================================================== */
+async function loadLibraries() {
+    const THREE_CDNS = [
+        'https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js',
+        'https://unpkg.com/three@0.147.0/build/three.min.js'
+    ];
+
+    const GLTF_CDNS = [
+        'https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js'
+    ];
+
+    const ORBIT_CDNS = [
+        'https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js'
+    ];
+
+    for (const url of THREE_CDNS) {
+        try { await loadScript(url); break; } catch {}
+    }
+    if (!window.THREE) throw 'Three.js failed to load';
+
+    for (const url of GLTF_CDNS) {
+        try { await loadScript(url); break; } catch {}
+    }
+    if (!THREE.GLTFLoader) throw 'GLTFLoader failed to load';
+
+    for (const url of ORBIT_CDNS) {
+        try { await loadScript(url); break; } catch {}
+    }
+}
+
+/* ==========================================================
+   INITIALIZE VIEWER (RUNS ONCE)
+========================================================== */
+function initViewer() {
+    if (initialized) return;
+    initialized = true;
+
+    const container = document.getElementById('container');
+    console.log('Container dimensions:', container.clientWidth, container.clientHeight);
+    
+    // Fallback to window dimensions if container has 0 height
+    const width = container.clientWidth || window.innerWidth;
+    const height = container.clientHeight || window.innerHeight;
+    console.log('Using dimensions:', width, height);
+    
+    if (height === 0) {
+        console.error('Container height is 0! Using window.innerHeight as fallback');
+    }
+
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x2a2a2a);
+
+    camera = new THREE.PerspectiveCamera(
+        60,
+        width / height,
+        0.1,
+        1000
+    );
+    camera.position.set(0, 0, 5);
+
+    renderer = new THREE.WebGLRenderer({ 
+        alpha: true, 
+        powerPreference: 'low-power',
+        precision: 'mediump'
+    });
+    renderer.setPixelRatio(1);
+    
+    const w = window.innerWidth || 300;
+    const h = window.innerHeight || 300;
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    
+    container.appendChild(renderer.domElement);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+
+    const light = new THREE.DirectionalLight(0xffffff, 1.5);
+    light.position.set(5, 5, 5);
+    scene.add(light);
+
+    if (THREE.OrbitControls) {
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.enablePan = false;
+    }
+
+    loadModel();
+    animate();
+}
+
+/* ==========================================================
+   LOAD MODEL (ONLY ONCE)
+========================================================== */
+function loadModel() {
+    const url = '$finalModelUrl';
+    console.log('Loading model from URL:', url);
+    const loader = new THREE.GLTFLoader();
+
+    loader.load(
+        url,
+        gltf => {
+            model = gltf.scene;
+
+            const box = new THREE.Box3().setFromObject(model);
+            const size = box.getSize(new THREE.Vector3());
+            const center = box.getCenter(new THREE.Vector3());
+
+            model.position.sub(center);
+            model.scale.setScalar(2 / Math.max(size.x, size.y, size.z));
+
+            scene.add(model);
+            hideLoading();
+        },
+        xhr => {
+            if (xhr.lengthComputable) {
+                document.querySelector('#loading div:last-child').textContent =
+                    `Loading ${'$'}{Math.round((xhr.loaded / xhr.total) * 100)}%`;
+            }
+        },
+        err => showError('Failed to load model')
+    );
+}
+
+/* ==========================================================
+   RENDER LOOP
+========================================================== */
+function animate() {
+    requestAnimationFrame(animate);
+    if (controls) controls.update();
+    renderer.render(scene, camera);
+}
+
+/* ==========================================================
+   RESIZE
+========================================================== */
+window.addEventListener('resize', () => {
+    if (!camera || !renderer) return;
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+/* ==========================================================
+   START
+========================================================== */
+(async function start() {
+    try {
+        await loadLibraries();
+        initViewer();
+    } catch (e) {
+        showError(e.toString());
+    }
+})();
+</script>
+</body>
+</html>
+
+                        """.trimIndent()
+                        
+                        webView.loadDataWithBaseURL(null, htmlContent, "text/html", "UTF-8", null)
+                        
+                        // Add logging to debug WebView content
+                        android.util.Log.d("Model3DViewer", "Loading WebView with HTML content:")
+                        android.util.Log.d("Model3DViewer", "Model URL: $finalModelUrl")
+                        android.util.Log.d("Model3DViewer", "HTML Content (first 500 chars): ${htmlContent.take(500)}")
+                        android.util.Log.d("Model3DViewer", "HTML Content (last 500 chars): ${htmlContent.takeLast(500)}")
+                        
+                        // Mark as initialized to prevent duplicate loading
+                        isWebViewInitialized = true
+                        }
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
             }
         }
     }
@@ -694,6 +1007,8 @@ fun AddReferenceDialog(
                                                     imageData = img
                                                     modelData = mdl
                                                     isGenerating = false
+                                                    // Refresh references to get the saved data from server
+                                                    viewModel.loadReferences(projectId)
                                                 },
                                                 onError = { err ->
                                                     generationError = err
@@ -862,6 +1177,10 @@ fun EditReferenceDialog(
                                         imageData = img
                                         modelData = mdl
                                         isGenerating = false
+                                        // Refresh references to get the saved data from server
+                                        if (projectId != null && viewModel != null) {
+                                            viewModel.loadReferences(projectId)
+                                        }
                                     },
                                     onError = { err ->
                                         generationError = err
@@ -928,14 +1247,16 @@ fun ReferenceCard(
     onDelete: () -> Unit,
     onEdit: () -> Unit
 ) {
+    val themeManager = LocalThemeManager.current
+    val isDarkMode = themeManager.isDarkMode
     var expanded by remember { mutableStateOf(false) }
     val is3D = projectArtStyle?.dimension == ArtDimension.THREE_D
 
     Box(
         Modifier
             .fillMaxWidth()
-            .background(PixelDarkBlue)
-            .border(2.dp, PixelAccent)
+            .background(if (isDarkMode) PixelDarkBlue else Color(0xFFE8F4F8))
+            .border(2.dp, if (isDarkMode) PixelAccent else Color(0xFF2196F3))
             .clickable { expanded = !expanded }
     ) {
         Column(
@@ -951,34 +1272,37 @@ fun ReferenceCard(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (reference.imageData != null && reference.imageData!!.isNotEmpty()) {
-                        Box(
-                            Modifier
-                                .size(60.dp)
-                                .background(Color.Black)
-                                .border(2.dp, PixelAccent)
-                        ) {
-                            ImageFromBase64(
-                                base64 = reference.imageData!!,
-                                contentDescription = "Reference thumbnail",
-                                modifier = Modifier.fillMaxSize()
-                            )
-
-                            if (is3D && reference.modelData != null) {
-                                Box(
-                                    modifier = Modifier
-                                        .align(Alignment.BottomEnd)
-                                        .background(Color(0xDD000000))
-                                        .padding(2.dp)
-                                ) {
-                                    Text(
-                                        "🎮",
-                                        fontSize = 12.sp
-                                    )
-                                }
+                    // Only show thumbnail for 2D references or if no 3D model exists
+                    if (!is3D || reference.modelData == null) {
+                        if (reference.imageData != null && reference.imageData!!.isNotEmpty()) {
+                            Box(
+                                Modifier
+                                    .size(60.dp)
+                                    .background(Color.Black)
+                                    .border(2.dp, PixelAccent)
+                            ) {
+                                ImageFromBase64(
+                                    base64 = reference.imageData!!,
+                                    contentDescription = "Reference thumbnail",
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                        } else {
+                            Box(
+                                Modifier
+                                    .size(60.dp)
+                                    .background(PixelMidBlue)
+                                    .border(2.dp, PixelAccent),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    if (reference.type == ReferenceType.CHARACTER) "👤" else "🌍",
+                                    fontSize = 28.sp
+                                )
                             }
                         }
                     } else {
+                        // For 3D models, show a 3D icon instead of thumbnail
                         Box(
                             Modifier
                                 .size(60.dp)
@@ -987,7 +1311,7 @@ fun ReferenceCard(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                if (reference.type == ReferenceType.CHARACTER) "👤" else "🌍",
+                                "🎮",
                                 fontSize = 28.sp
                             )
                         }
@@ -999,12 +1323,12 @@ fun ReferenceCard(
                             fontFamily = FontFamily.Monospace,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            color = PixelGold
+                            color = if (isDarkMode) PixelGold else Color(0xFF1976D2)
                         )
                         Text(
                             buildString {
                                 append(reference.type.name)
-                                if (is3D && reference.modelData != null) {
+                                if (is3D && reference.modelData != null && reference.modelData != "placeholder-3d-model-data") {
                                     append(" • 3D Model")
                                 } else if (reference.imageData != null) {
                                     append(" • Has Image")
@@ -1012,7 +1336,7 @@ fun ReferenceCard(
                             },
                             fontFamily = FontFamily.Monospace,
                             fontSize = 10.sp,
-                            color = Color(0xFF999999)
+                            color = if (isDarkMode) Color(0xFF999999) else Color(0xFF666666)
                         )
                     }
                 }
@@ -1049,7 +1373,7 @@ fun ReferenceCard(
                             .background(PixelAccent)
                     )
 
-                    if (is3D && reference.modelData != null) {
+                    if (is3D && reference.modelData != null && reference.modelData != "placeholder-3d-model-data") {
                         Text(
                             "🎮 3D Model View:",
                             fontFamily = FontFamily.Monospace,

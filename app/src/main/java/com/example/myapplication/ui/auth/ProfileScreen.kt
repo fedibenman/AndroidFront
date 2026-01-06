@@ -20,6 +20,8 @@ import com.example.myapplication.DTOs.Profile
 import com.example.myapplication.R
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.example.myapplication.ui.auth.ProfileViewModel
+import com.example.myapplication.ui.theme.LocalThemeManager
+import com.example.myapplication.ui.theme.AnimatedThemeToggle
 
 /**
  * Loading state composable
@@ -207,6 +209,9 @@ fun ProfileScreen(
     onBack: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
+    val themeManager = LocalThemeManager.current
+    val isDarkMode = themeManager.isDarkMode
+    
     val vm: ProfileViewModel = remember { ProfileViewModel() }
 
     // Observe profile data and UI state
@@ -223,8 +228,17 @@ fun ProfileScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .background(if (isDarkMode) Color(0xFF1A1A1A) else MaterialTheme.colorScheme.background)
         ) {
+            // Theme toggle button at top right
+            Box(
+                modifier = Modifier
+                    .padding(top = 50.dp, end = 20.dp)
+                    .align(Alignment.TopEnd)
+            ) {
+                AnimatedThemeToggle()
+            }
+            
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {

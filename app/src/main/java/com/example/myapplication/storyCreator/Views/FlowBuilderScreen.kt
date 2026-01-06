@@ -58,6 +58,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import com.example.myapplication.ui.theme.AnimatedThemeToggle
+import com.example.myapplication.ui.theme.LocalThemeManager
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.toArgb
@@ -295,6 +297,9 @@ fun SketchPadDialog(
     onDismiss: () -> Unit,
     onSketchSaved: (String) -> Unit
 ) {
+    val themeManager = LocalThemeManager.current
+    val isDarkMode = themeManager.isDarkMode
+    
     var pathsData by remember { mutableStateOf(listOf<DrawingPath>()) }
     var currentPoints by remember { mutableStateOf(listOf<Offset>()) }
     var selectedColor by remember { mutableStateOf(Color.Black) }
@@ -315,8 +320,8 @@ fun SketchPadDialog(
                 .align(Alignment.Center)
                 .width(600.dp)
                 .padding(16.dp)
-                .background(PixelDarkBlue)
-                .border(3.dp, PixelHighlight)
+                .background(if (isDarkMode) PixelDarkBlue else Color(0xFFE8F4F8))
+                .border(3.dp, if (isDarkMode) PixelHighlight else Color(0xFF2196F3))
         ) {
             Column(
                 Modifier.padding(16.dp),
@@ -460,6 +465,9 @@ fun EditNodeDialog(
     onDismiss: () -> Unit,
     onSave: (String) -> Unit
 ) {
+    val themeManager = LocalThemeManager.current
+    val isDarkMode = themeManager.isDarkMode
+    
     var textValue by remember { mutableStateOf(node.text) }
     var showImageOptions by remember { mutableStateOf(false) }
     var showSketchPad by remember { mutableStateOf(false) }
@@ -479,8 +487,8 @@ fun EditNodeDialog(
                 .width(600.dp)
                 .heightIn(max = 700.dp)
                 .padding(16.dp)
-                .background(PixelDarkBlue)
-                .border(3.dp, PixelHighlight)
+                .background(if (isDarkMode) PixelDarkBlue else Color(0xFFE8F4F8))
+                .border(3.dp, if (isDarkMode) PixelHighlight else Color(0xFF2196F3))
                 .clickable(enabled = false) { }
         ) {
             Column(
@@ -688,6 +696,8 @@ fun FlowchartCanvas(
     state: FlowchartState,
     onSaveGraph: (FlowchartState) -> Unit
 ) {
+    val themeManager = LocalThemeManager.current
+    val isDarkMode = themeManager.isDarkMode
     val density = LocalDensity.current
     val nodeWidthPx = with(density) { NODE_WIDTH.dp.toPx() }
     val nodeHeightPx = with(density) { NODE_HEIGHT.dp.toPx() }
@@ -707,11 +717,11 @@ fun FlowchartCanvas(
 
     var isCanvasDragging by remember { mutableStateOf(false) }
 
-    Box(Modifier.fillMaxSize().background(PixelDarkBlue)) {
+    Box(Modifier.fillMaxSize().background(if (isDarkMode) PixelDarkBlue else Color(0xFFF5F5F5))) {
         Box(
             Modifier
                 .fillMaxSize()
-                .background(PixelMidBlue)
+                .background(if (isDarkMode) PixelMidBlue else Color(0xFFE8F4F8))
                 .pointerInput(Unit) {
                     detectTransformGestures { _, panChange, zoomChange, _ ->
                         if (zoomChange != 1f) {
@@ -1364,15 +1374,26 @@ fun PixelButton(
     icon: String,
     contentDescription: String
 ) {
+    val themeManager = LocalThemeManager.current
+    val isDarkMode = themeManager.isDarkMode
+    
     Box(
         modifier = modifier
             .size(40.dp)
             .background(
-                if (enabled) Color(0xFF4A4A4A) else Color(0xFF2A2A2A)
+                if (enabled) {
+                    if (isDarkMode) Color(0xFF4A4A4A) else Color(0xFFE0E0E0)
+                } else {
+                    if (isDarkMode) Color(0xFF2A2A2A) else Color(0xFFCCCCCC)
+                }
             )
             .border(
                 width = 2.dp,
-                color = if (enabled) Color(0xFF6A6A6A) else Color(0xFF3A3A3A)
+                color = if (enabled) {
+                    if (isDarkMode) Color(0xFF6A6A6A) else Color(0xFF999999)
+                } else {
+                    if (isDarkMode) Color(0xFF3A3A3A) else Color(0xFFBBBBBB)
+                }
             )
             .clickable(enabled = enabled) { onClick() },
         contentAlignment = Alignment.Center
@@ -1380,7 +1401,11 @@ fun PixelButton(
         Text(
             text = icon,
             fontSize = 20.sp,
-            color = if (enabled) Color.White else Color(0xFF666666)
+            color = if (enabled) {
+                if (isDarkMode) Color.White else Color(0xFF333333)
+            } else {
+                if (isDarkMode) Color(0xFF666666) else Color(0xFF999999)
+            }
         )
     }
 }
@@ -1392,15 +1417,26 @@ fun PixelTextButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true
 ) {
+    val themeManager = LocalThemeManager.current
+    val isDarkMode = themeManager.isDarkMode
+    
     Box(
         modifier = modifier
             .height(36.dp)
             .background(
-                if (enabled) Color(0xFF4A4A4A) else Color(0xFF2A2A2A)
+                if (enabled) {
+                    if (isDarkMode) Color(0xFF4A4A4A) else Color(0xFFE0E0E0)
+                } else {
+                    if (isDarkMode) Color(0xFF2A2A2A) else Color(0xFFCCCCCC)
+                }
             )
             .border(
                 width = 2.dp,
-                color = if (enabled) Color(0xFF6A6A6A) else Color(0xFF3A3A3A)
+                color = if (enabled) {
+                    if (isDarkMode) Color(0xFF6A6A6A) else Color(0xFF999999)
+                } else {
+                    if (isDarkMode) Color(0xFF3A3A3A) else Color(0xFFBBBBBB)
+                }
             )
             .clickable(enabled = enabled) { onClick() }
             .padding(horizontal = 12.dp, vertical = 8.dp),
@@ -1411,7 +1447,11 @@ fun PixelTextButton(
             fontSize = 11.sp,
             fontFamily = FontFamily.Monospace,
             fontWeight = FontWeight.Bold,
-            color = if (enabled) Color.White else Color(0xFF666666),
+            color = if (enabled) {
+                if (isDarkMode) Color.White else Color(0xFF333333)
+            } else {
+                if (isDarkMode) Color(0xFF666666) else Color(0xFF999999)
+            },
             letterSpacing = 1.sp
         )
     }
@@ -1433,11 +1473,14 @@ fun BottomToolbar(
     onTogglePreview: () -> Unit,
     onSave: () -> Unit
 ) {
+    val themeManager = LocalThemeManager.current
+    val isDarkMode = themeManager.isDarkMode
+    
     Row(
         Modifier
             .fillMaxWidth()
-            .background(Color(0xFF1A1A1A))
-            .border(width = 3.dp, color = Color(0xFF000000))
+            .background(if (isDarkMode) Color(0xFF1A1A1A) else Color(0xFFE0E0E0))
+            .border(width = 3.dp, color = if (isDarkMode) Color(0xFF000000) else Color(0xFF999999))
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -1461,7 +1504,7 @@ fun BottomToolbar(
             Modifier
                 .width(2.dp)
                 .height(30.dp)
-                .background(Color(0xFF4A4A4A))
+                .background(if (isDarkMode) Color(0xFF4A4A4A) else Color(0xFF999999))
         )
 
         // Edit Node icon
@@ -1495,13 +1538,13 @@ fun BottomToolbar(
         // Zoom and Pan info
         Box(
             Modifier
-                .background(Color(0xFF2A2A2A))
-                .border(2.dp, Color(0xFF4A4A4A))
+                .background(if (isDarkMode) Color(0xFF2A2A2A) else Color(0xFFCCCCCC))
+                .border(2.dp, if (isDarkMode) Color(0xFF4A4A4A) else Color(0xFF999999))
                 .padding(horizontal = 12.dp, vertical = 6.dp)
         ) {
             Text(
                 "ZOOM: ${String.format("%.1f", scale)}x | PAN: (${pan.x.toInt()}, ${pan.y.toInt()})",
-                color = Color(0xFF00FF00),
+                color = if (isDarkMode) Color(0xFF00FF00) else Color(0xFF006600),
                 fontSize = 9.sp,
                 fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.Bold,
@@ -1780,6 +1823,9 @@ fun FlowBuilderScreen(
     viewModel: StoryProjectViewModel? = null,
     onPersist: (FlowchartState) -> Unit = {}
 ) {
+    val themeManager = LocalThemeManager.current
+    val isDarkMode = themeManager.isDarkMode
+    
     val nodes = remember { mutableStateListOf<FlowNode>() }
     val state = remember { FlowchartState(nodes) }
     var isLoading by remember { mutableStateOf(false) }
@@ -1828,6 +1874,15 @@ fun FlowBuilderScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
+        // Theme toggle button at top right
+        Box(
+            modifier = Modifier
+                .padding(top = 50.dp, end = 20.dp)
+                .align(Alignment.TopEnd)
+        ) {
+            AnimatedThemeToggle()
+        }
+        
         Column(modifier = Modifier.fillMaxSize()) {
             if (isLoading) {
                 Box(
@@ -1896,8 +1951,8 @@ fun FlowBuilderScreen(
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFF0D0D0D))
-                        .border(width = 2.dp, color = Color(0xFF000000))
+                        .background(if (isDarkMode) Color(0xFF0D0D0D) else Color(0xFFD0D0D0))
+                        .border(width = 2.dp, color = if (isDarkMode) Color(0xFF000000) else Color(0xFF999999))
                         .padding(8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {

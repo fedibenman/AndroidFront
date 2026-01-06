@@ -14,7 +14,8 @@ data class ReferenceDto(
     val name: String,
     val lore: String,
     val design: String,
-    val imageData: String? = null
+    val imageData: String? = null,
+    val modelData: String? = null
 )
 
 @Serializable
@@ -38,7 +39,8 @@ data class AddReferenceDto(
     val name: String,
     val lore: String,
     val design: String,
-    val imageData: String? = null
+    val imageData: String? = null,
+    val modelData: String? = null
 )
 
 // Extension function to convert Reference to AddReferenceDto
@@ -48,7 +50,8 @@ fun Reference.toAddDto(): AddReferenceDto {
         name = name,
         lore = lore,
         design = design,
-        imageData = imageData
+        imageData = imageData,
+        modelData = modelData
     )
 }
 
@@ -60,7 +63,8 @@ fun Reference.toDto(): ReferenceDto {
         name = name,
         lore = lore,
         design = design,
-        imageData = imageData
+        imageData = imageData,
+        modelData = modelData
     )
 }
 
@@ -71,7 +75,8 @@ fun ReferenceDto.toReference(): Reference {
         name = name,
         lore = lore,
         design = design,
-        imageData = imageData
+        imageData = imageData,
+        modelData = modelData
     )
 }
 

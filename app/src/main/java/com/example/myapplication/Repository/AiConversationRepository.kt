@@ -4,6 +4,7 @@ import android.util.Log
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
@@ -181,9 +182,15 @@ object ApiClient {
                 isLenient = true
             })
         }
+        install(HttpTimeout) {
+            requestTimeoutMillis = 900000  // 30 seconds
+            connectTimeoutMillis = 900000  // 10 seconds
+            socketTimeoutMillis = 900000   // 30 seconds
+        }
     }
 
-    const val BASE_URL = "http://192.168.228.182:3001"
+
+    const val BASE_URL = "http://192.168.68.182:3001"
 
 }
 

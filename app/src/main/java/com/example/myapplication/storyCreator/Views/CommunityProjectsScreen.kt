@@ -61,6 +61,7 @@ import com.example.myapplication.storyCreator.ViewModel.CommunityProjectViewMode
 import com.example.myapplication.storyCreator.ViewModel.StoryProjectViewModel
 import com.example.myapplication.storyCreator.model.FlowchartState
 import com.example.myapplication.storyCreator.model.NodeType
+import com.example.myapplication.ui.theme.LocalThemeManager
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
@@ -84,6 +85,9 @@ fun CommunityProjectsScreen(
     onProjectClick: (String) -> Unit,
     onForkSuccess: () -> Unit
 ) {
+    val themeManager = LocalThemeManager.current
+    val isDarkMode = themeManager.isDarkMode
+    
     val projects by viewModel.communityProjects.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val currentUserId by viewModel.currentUserId.collectAsState()
@@ -105,8 +109,17 @@ fun CommunityProjectsScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(PixelDarkBlue)
+                .background(if (isDarkMode) PixelDarkBlue else Color(0xFFF5F5F5))
         ) {
+            // Theme toggle button at top right
+            Box(
+                modifier = Modifier
+                    .padding(top = 50.dp, end = 20.dp)
+                    .align(Alignment.TopEnd)
+            ) {
+                com.example.myapplication.ui.theme.AnimatedThemeToggle()
+            }
+            
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
@@ -114,8 +127,8 @@ fun CommunityProjectsScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFF1A1A1A))
-                        .border(width = 2.dp, color = Color(0xFF2A2A2A))
+                        .background(if (isDarkMode) Color(0xFF1A1A1A) else Color(0xFFE0E0E0))
+                        .border(width = 2.dp, color = if (isDarkMode) Color(0xFF2A2A2A) else Color(0xFF999999))
                         .padding(12.dp)
                 ) {
                     Row(

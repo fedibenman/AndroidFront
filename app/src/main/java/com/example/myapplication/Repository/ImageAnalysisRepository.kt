@@ -16,10 +16,8 @@ import java.net.URL
  * This class handles sending images to the backend for level detection
  */
 class ImageAnalysisRepository {
-    
 
-    private val baseUrl = "http://192.168.228.182:3001/analyze"
-
+    private val baseUrl = "http://192.168.238.182:3001/analyze"
 
     
     /**

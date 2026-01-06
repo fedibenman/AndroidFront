@@ -1,6 +1,5 @@
-package com.example.myapplication.ui.auth
+package com.example.myapplication.storyCreator.ViewModel
 
-import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,6 +7,8 @@ import kotlinx.coroutines.launch
 
 import com.example.myapplication.ui.auth.TokenDataStoreManager
 import com.example.myapplication.AppContextHolder
+import com.example.myapplication.storyCreator.repository.AuthRepository
+import com.example.myapplication.storyCreator.repository.KtorAuthRepository
 
 /**
  * ViewModel for authentication.

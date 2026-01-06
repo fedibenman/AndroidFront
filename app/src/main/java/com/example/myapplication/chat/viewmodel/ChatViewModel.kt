@@ -7,12 +7,11 @@ import androidx.lifecycle.viewModelScope
 import com.example.myapplication.chat.model.ChatMessage
 import com.example.myapplication.chat.model.ChatRoom
 import com.example.myapplication.chat.repository.ChatRepository
-import com.example.myapplication.ui.auth.KtorAuthRepository
+import com.example.myapplication.storyCreator.repository.KtorAuthRepository
 import com.example.myapplication.ui.auth.TokenDataStoreManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class ChatViewModel(application: Application) : AndroidViewModel(application) {

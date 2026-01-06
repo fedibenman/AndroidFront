@@ -48,6 +48,8 @@ import androidx.compose.ui.unit.sp
 import com.example.myapplication.storyCreator.DTOs.ProjectDto
 import com.example.myapplication.storyCreator.ViewModel.PublishState
 import com.example.myapplication.storyCreator.ViewModel.StoryProjectViewModel
+import com.example.myapplication.ui.theme.LocalThemeManager
+import androidx.compose.ui.platform.LocalContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -60,14 +62,16 @@ fun ProjectCard(
     onDelete: () -> Unit,
     onShare: () -> Unit
 ) {
+    val themeManager = LocalThemeManager.current
+    val isDarkMode = themeManager.isDarkMode
     val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(180.dp)
-            .background(PixelMidBlue)
-            .border(3.dp, PixelAccent)
+            .background(if (isDarkMode) PixelMidBlue else Color(0xFFE8F4F8))
+            .border(3.dp, if (isDarkMode) PixelAccent else Color(0xFF2196F3))
             .clickable(onClick = onClick)
     ) {
         Column(
@@ -88,7 +92,7 @@ fun ProjectCard(
                         fontFamily = FontFamily.Monospace,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = PixelGold,
+                        color = if (isDarkMode) PixelGold else Color(0xFF1976D2),
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
@@ -98,8 +102,15 @@ fun ProjectCard(
                     if (project.isFork) {
                         Box(
                             modifier = Modifier
-                                .background(PixelCyan.copy(alpha = 0.3f), RoundedCornerShape(4.dp))
-                                .border(1.dp, PixelCyan, RoundedCornerShape(4.dp))
+                                .background(
+                                    if (isDarkMode) PixelCyan.copy(alpha = 0.3f) else Color(0xFF2196F3).copy(alpha = 0.2f), 
+                                    RoundedCornerShape(4.dp)
+                                )
+                                .border(
+                                    1.dp, 
+                                    if (isDarkMode) PixelCyan else Color(0xFF2196F3), 
+                                    RoundedCornerShape(4.dp)
+                                )
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
                             Text(
@@ -107,7 +118,7 @@ fun ProjectCard(
                                 fontFamily = FontFamily.Monospace,
                                 fontSize = 8.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = PixelCyan
+                                color = if (isDarkMode) PixelCyan else Color(0xFF1976D2)
                             )
                         }
                     }
@@ -118,7 +129,7 @@ fun ProjectCard(
                         text = project.description,
                         fontFamily = FontFamily.Monospace,
                         fontSize = 12.sp,
-                        color = Color.LightGray,
+                        color = if (isDarkMode) Color.LightGray else Color(0xFF666666),
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -130,7 +141,7 @@ fun ProjectCard(
                         text = "Forked from ${project.originalAuthorName}",
                         fontFamily = FontFamily.Monospace,
                         fontSize = 10.sp,
-                        color = PixelCyan,
+                        color = if (isDarkMode) PixelCyan else Color(0xFF2196F3),
                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                     )
                 }
@@ -145,7 +156,7 @@ fun ProjectCard(
                     text = "Updated: ${dateFormat.format(Date(project.updatedAt))}",
                     fontFamily = FontFamily.Monospace,
                     fontSize = 10.sp,
-                    color = Color.Gray
+                    color = if (isDarkMode) Color.Gray else Color(0xFF999999)
                 )
 
                 Row(
@@ -156,7 +167,7 @@ fun ProjectCard(
                     Icon(
                         imageVector = Icons.Default.Share,
                         contentDescription = "Share to Community",
-                        tint = PixelGold,
+                        tint = if (isDarkMode) PixelGold else Color(0xFF1976D2),
                         modifier = Modifier
                             .size(24.dp)
                             .clickable(
@@ -170,7 +181,7 @@ fun ProjectCard(
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Delete Project",
-                        tint = PixelHighlight,
+                        tint = if (isDarkMode) PixelHighlight else Color(0xFFD32F2F),
                         modifier = Modifier
                             .size(24.dp)
                             .clickable(
@@ -190,6 +201,9 @@ fun ProjectsListScreen(
     viewModel: StoryProjectViewModel,
     onProjectClick: (String) -> Unit
 ) {
+    val themeManager = LocalThemeManager.current
+    val isDarkMode = themeManager.isDarkMode
+    
     val projects by viewModel.projects.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val publishState by viewModel.publishState.collectAsState()
@@ -209,7 +223,7 @@ fun ProjectsListScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(PixelDarkBlue)
+            .background(if (isDarkMode) PixelDarkBlue else Color(0xFFF5F5F5))
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
@@ -218,8 +232,8 @@ fun ProjectsListScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFF1A1A1A))
-                    .border(width = 2.dp, color = Color(0xFF2A2A2A))
+                    .background(if (isDarkMode) Color(0xFF1A1A1A) else Color(0xFFE0E0E0))
+                    .border(width = 2.dp, color = if (isDarkMode) Color(0xFF2A2A2A) else Color(0xFF999999))
                     .padding(12.dp)
             ) {
                 Row(
@@ -229,7 +243,7 @@ fun ProjectsListScreen(
                     Box(
                         modifier = Modifier
                             .size(40.dp)
-                            .background(PixelHighlight, RoundedCornerShape(4.dp))
+                            .background(if (isDarkMode) PixelHighlight else Color(0xFF2196F3), RoundedCornerShape(4.dp))
                             .border(2.dp, Color.White, RoundedCornerShape(4.dp))
                             .clickable { showCreateDialog = true },
                         contentAlignment = Alignment.Center
@@ -269,13 +283,13 @@ fun ProjectsListScreen(
                             "No projects yet",
                             fontFamily = FontFamily.Monospace,
                             fontSize = 16.sp,
-                            color = Color.Gray
+                            color = if (isDarkMode) Color.Gray else Color(0xFF666666)
                         )
                         Text(
                             "Click the + button to create your first story!",
                             fontFamily = FontFamily.Monospace,
                             fontSize = 12.sp,
-                            color = Color.Gray
+                            color = if (isDarkMode) Color.Gray else Color(0xFF666666)
                         )
                     }
                 }

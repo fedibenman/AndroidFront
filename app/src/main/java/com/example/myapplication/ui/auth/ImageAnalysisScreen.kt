@@ -36,6 +36,46 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.myapplication.viewModel.ImageAnalysisViewModel
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.offset
+import com.example.myapplication.ui.theme.AnimatedThemeToggle
+import com.example.myapplication.ui.theme.LocalThemeManager
+import com.example.myapplication.ui.theme.MyApplicationTheme
+
+
+@Composable
+fun PixelArtButton(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    content: @Composable BoxScope.() -> Unit
+) {
+    Box(
+        modifier = modifier
+            .clickable(enabled = enabled) { onClick() }
+    ) {
+        // Shadow layer
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .offset(x = 4.dp, y = 4.dp)
+                .background(color = Color(0xFF4A4A4A))
+                .border(width = 2.dp, color = Color.Black)
+        )
+        
+        // Main button
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = if (enabled) Color(0xFFE8F4F8) else Color.Gray)
+                .border(width = 2.dp, color = Color.Black),
+            contentAlignment = Alignment.Center
+        ) {
+            content()
+        }
+    }
+}
+
 
 @Composable
 fun ImageAnalysisScreen(
@@ -43,6 +83,8 @@ fun ImageAnalysisScreen(
 ) {
     // ViewModel for handling image analysis
     val viewModel: ImageAnalysisViewModel = viewModel()
+    val themeManager = LocalThemeManager.current
+    val isDarkMode = themeManager.isDarkMode
     
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var selectedImageBitmap by remember { mutableStateOf<Bitmap?>(null) }
@@ -88,12 +130,33 @@ fun ImageAnalysisScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF1E1E1E))
-            .padding(16.dp)
+    Box(
+        modifier = Modifier.fillMaxSize()
     ) {
+        // Background based on theme
+        if (isDarkMode) {
+            // Dark theme background using background_dark image
+            Image(
+                painter = painterResource(id = R.drawable.background_dark),
+                contentDescription = "Dark Background",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            // Light theme background
+            Image(
+                painter = painterResource(id = R.drawable.background_general),
+                contentDescription = "Background",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+        
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
         // Header
         Row(
             modifier = Modifier
@@ -104,7 +167,7 @@ fun ImageAnalysisScreen(
             Icon(
                 painter = painterResource(id = R.drawable.x_icon),
                 contentDescription = "Back",
-                tint = Color.White,
+                tint = Color.Black,
                 modifier = Modifier
                     .size(28.dp)
                     .clickable { onBack() }
@@ -114,7 +177,7 @@ fun ImageAnalysisScreen(
                 text = "Image Analysis",
                 style = TextStyle(
                     fontFamily = PressStart,
-                    color = Color.White,
+                    color = Color.Black,
                     fontSize = 20.sp
                 )
             )
@@ -125,8 +188,8 @@ fun ImageAnalysisScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(300.dp)
-                .background(Color(0xFF2A2A2A))
-                .clip(RoundedCornerShape(12.dp))
+                .background(Color.White)
+                .border(width = 2.dp, color = Color.Black)
                 .clickable { imagePickerLauncher.launch("image/*") },
             contentAlignment = Alignment.Center
         ) {
@@ -136,8 +199,7 @@ fun ImageAnalysisScreen(
                     contentDescription = "Selected image",
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(8.dp)
-                        .clip(RoundedCornerShape(8.dp)),
+                        .padding(8.dp),
                     contentScale = ContentScale.Crop
                 )
             } else {
@@ -151,14 +213,15 @@ fun ImageAnalysisScreen(
                     Icon(
                         painter = painterResource(id = R.drawable.add_image_button),
                         contentDescription = "Add image",
-                        tint = Color.Gray,
+                        tint = Color.Black,
                         modifier = Modifier.size(48.dp)
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = "Tap to select an image",
-                        color = Color.Gray,
-                        fontSize = 15.sp
+                        color = Color.Black,
+                        fontSize = 15.sp,
+                        style = TextStyle(fontFamily = PressStart)
                     )
                 }
             }
@@ -167,29 +230,32 @@ fun ImageAnalysisScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         // Analyze Button
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-                .background(Color(0xFF4CAF50))
-                .clip(RoundedCornerShape(25.dp))
-                .clickable { sendImageForAnalysis() },
-            contentAlignment = Alignment.Center
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
         ) {
-            if (isLoading) {
-                CircularProgressIndicator(
-                    color = Color.White,
-                    modifier = Modifier.size(24.dp)
-                )
-            } else {
-                Text(
-                    text = "ANALYZE IMAGE",
-                    style = TextStyle(
+            PixelArtButton(
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
+                    .height(50.dp),
+                onClick = { sendImageForAnalysis() },
+                enabled = !isLoading
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
                         color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
+                        modifier = Modifier.size(24.dp)
                     )
-                )
+                } else {
+                    Text(
+                        text = "ANALYZE IMAGE",
+                        style = TextStyle(
+                            fontFamily = PressStart,
+                            color = Color.Black,
+                            fontSize = 12.sp
+                        )
+                    )
+                }
             }
         }
 
@@ -250,6 +316,16 @@ fun ImageAnalysisScreen(
                 )
             }
         }
+        }
+        
+        // Theme toggle button at top right - positioned last to be on top
+        Box(
+            modifier = Modifier
+                .padding(top = 50.dp, end = 20.dp)
+                .align(Alignment.TopEnd)
+        ) {
+            AnimatedThemeToggle()
+        }
     }
 }
 
@@ -257,6 +333,124 @@ fun ImageAnalysisScreen(
 @Composable
 fun PreviewImageAnalysisScreen() {
     MyApplicationTheme {
-        ImageAnalysisScreen(onBack = {})
+        // Simple preview without theme manager for now
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Background
+            Image(
+                painter = painterResource(id = R.drawable.background_general),
+                contentDescription = "Background",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+            
+            // Theme toggle button at top right
+            Box(
+                modifier = Modifier
+                    .padding(top = 50.dp, end = 20.dp)
+                    .align(Alignment.TopEnd)
+            ) {
+                AnimatedThemeToggle()
+            }
+            
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                // Header
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 24.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.x_icon),
+                        contentDescription = "Back",
+                        tint = Color.Black,
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(
+                        text = "Image Analysis",
+                        style = TextStyle(
+                            fontFamily = com.example.myapplication.ui.theme.PressStart,
+                            color = Color.Black,
+                            fontSize = 20.sp
+                        )
+                    )
+                }
+                
+                // Image Selection Area
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp)
+                        .background(Color.White)
+                        .border(width = 2.dp, color = Color.Black),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.add_image_button),
+                            contentDescription = "Add image",
+                            tint = Color.Black,
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "Tap to select an image",
+                            color = Color.Black,
+                            fontSize = 15.sp,
+                            style = TextStyle(fontFamily = com.example.myapplication.ui.theme.PressStart)
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Analyze Button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    // Mock PixelArtButton
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.85f)
+                            .height(50.dp)
+                    ) {
+                        // Shadow layer
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .offset(x = 4.dp, y = 4.dp)
+                                .background(color = Color(0xFF4A4A4A))
+                                .border(width = 2.dp, color = Color.Black)
+                        )
+                        
+                        // Main button
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(color = Color(0xFFE8F4F8))
+                                .border(width = 2.dp, color = Color.Black),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "ANALYZE IMAGE",
+                                style = TextStyle(
+                                    fontFamily = com.example.myapplication.ui.theme.PressStart,
+                                    color = Color.Black,
+                                    fontSize = 12.sp
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }

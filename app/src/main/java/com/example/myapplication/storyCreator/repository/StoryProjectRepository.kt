@@ -21,6 +21,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.client.plugins.timeout
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlinx.coroutines.Dispatchers
@@ -390,6 +391,10 @@ class StoryProjectRepository(
             contentType(ContentType.Application.Json)
             headers {
                 append("Authorization", "Bearer $token")
+            }
+            timeout {
+                requestTimeoutMillis = 35 * 60 * 1000L // 35 minutes
+                socketTimeoutMillis = 35 * 60 * 1000L
             }
         }
 

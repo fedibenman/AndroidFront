@@ -1,7 +1,17 @@
 package com.example.myapplication.ui.auth
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
@@ -26,8 +36,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.R
+import com.example.myapplication.storyCreator.ViewModel.AuthViewModel
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.example.myapplication.ui.theme.PressStart
+import com.example.myapplication.ui.theme.LocalThemeManager
+import com.example.myapplication.ui.theme.AnimatedThemeToggle
 
 
 /**
@@ -39,15 +52,37 @@ fun RequestResetCodeScreen(
     onBackToLogin: () -> Unit,
     onCodeSent: () -> Unit
 ) {
+    val themeManager = LocalThemeManager.current
+    val isDarkMode = themeManager.isDarkMode
+    
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.background_general),
-            contentDescription = "Background",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.matchParentSize()
-        )
+        // Background based on theme
+        if (isDarkMode) {
+            Image(
+                painter = painterResource(id = R.drawable.background_dark),
+                contentDescription = "Dark Background",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.matchParentSize()
+            )
+        } else {
+            Image(
+                painter = painterResource(id = R.drawable.background_general),
+                contentDescription = "Background",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.matchParentSize()
+            )
+        }
+
+        // Theme toggle button at top right
+        Box(
+            modifier = Modifier
+                .padding(top = 50.dp, end = 20.dp)
+                .align(Alignment.TopEnd)
+        ) {
+            AnimatedThemeToggle()
+        }
 
         Column(
             modifier = Modifier
@@ -231,6 +266,9 @@ fun CodeInputScreen(
     onCodeVerified: () -> Unit,
     onBackToLogin: () -> Unit
 ) {
+    val themeManager = LocalThemeManager.current
+    val isDarkMode = themeManager.isDarkMode
+    
     val digits = remember { mutableStateListOf(*Array(codeLength) { "" }) }
 
     // Keep ViewModel.resetCode in sync with local digit boxes
@@ -241,12 +279,31 @@ fun CodeInputScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.background_general),
-            contentDescription = "Background",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.matchParentSize()
-        )
+        // Background based on theme
+        if (isDarkMode) {
+            Image(
+                painter = painterResource(id = R.drawable.background_dark),
+                contentDescription = "Dark Background",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.matchParentSize()
+            )
+        } else {
+            Image(
+                painter = painterResource(id = R.drawable.background_general),
+                contentDescription = "Background",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.matchParentSize()
+            )
+        }
+
+        // Theme toggle button at top right
+        Box(
+            modifier = Modifier
+                .padding(top = 50.dp, end = 20.dp)
+                .align(Alignment.TopEnd)
+        ) {
+            AnimatedThemeToggle()
+        }
 
         Column(
             modifier = Modifier
@@ -402,17 +459,39 @@ fun NewPasswordScreen(
     onPasswordChanged: () -> Unit,
     onBackToLogin: () -> Unit
 ) {
+    val themeManager = LocalThemeManager.current
+    val isDarkMode = themeManager.isDarkMode
+    
     var confirmPassword by remember { mutableStateOf("") }
 
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.background_general),
-            contentDescription = "Background",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.matchParentSize()
-        )
+        // Background based on theme
+        if (isDarkMode) {
+            Image(
+                painter = painterResource(id = R.drawable.background_dark),
+                contentDescription = "Dark Background",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.matchParentSize()
+            )
+        } else {
+            Image(
+                painter = painterResource(id = R.drawable.background_general),
+                contentDescription = "Background",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.matchParentSize()
+            )
+        }
+
+        // Theme toggle button at top right
+        Box(
+            modifier = Modifier
+                .padding(top = 50.dp, end = 20.dp)
+                .align(Alignment.TopEnd)
+        ) {
+            AnimatedThemeToggle()
+        }
 
         Column(
             modifier = Modifier

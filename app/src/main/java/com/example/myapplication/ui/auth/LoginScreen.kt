@@ -3,9 +3,7 @@ package com.example.myapplication.ui.auth
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -19,6 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.R
+import com.example.myapplication.storyCreator.ViewModel.AuthViewModel
 import com.example.myapplication.ui.theme.AnimatedThemeToggle
 import com.example.myapplication.ui.theme.LocalThemeManager
 import com.example.myapplication.ui.theme.MyApplicationTheme

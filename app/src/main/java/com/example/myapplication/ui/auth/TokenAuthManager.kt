@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myapplication.AppContextHolder
 import com.example.myapplication.DTOs.Profile
+import com.example.myapplication.storyCreator.repository.KtorAuthRepository
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 

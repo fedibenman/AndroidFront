@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.auth
+package com.example.myapplication.storyCreator.repository
 
 import LoginResponse
 import android.util.Log
@@ -77,7 +77,7 @@ class KtorAuthRepository : AuthRepository {
         defaultRequest {
             // When running on Android emulator, use 10.0.2.2 to reach host machine's localhost.
             // Ensure your Nest API is running on the host at port 3000.
-            url("http://192.168.1.7:3001/")
+            url("http://192.168.68.182:3001/")
 
             contentType(ContentType.Application.Json)
         }

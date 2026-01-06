@@ -9,7 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.myapplication.community.data.remote.RetrofitInstance
 import com.example.myapplication.community.model.Comment
 import com.example.myapplication.community.model.Post
-import com.example.myapplication.ui.auth.KtorAuthRepository
+import com.example.myapplication.storyCreator.repository.KtorAuthRepository
 import com.example.myapplication.ui.auth.TokenDataStoreManager
 import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.HttpException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import org.json.JSONObject
 
 class PostViewModel(application: Application) : AndroidViewModel(application) {
 

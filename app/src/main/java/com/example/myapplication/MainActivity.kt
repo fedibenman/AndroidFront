@@ -33,7 +33,7 @@ import com.example.myapplication.storyCreator.ViewModel.CommunityProjectViewMode
 import com.example.myapplication.storyCreator.ViewModel.StoryProjectViewModel
 import com.example.myapplication.storyCreator.Views.FlowBuilderScreen
 import com.example.myapplication.storyCreator.Views.ProjectsMainScreen
-import com.example.myapplication.ui.auth.AuthViewModel
+import com.example.myapplication.storyCreator.ViewModel.AuthViewModel
 import com.example.myapplication.ui.auth.ChatPage
 import com.example.myapplication.ui.auth.CodeInputScreen
 import com.example.myapplication.ui.auth.ImageAnalysisScreen
@@ -61,7 +61,6 @@ class MainActivity : ComponentActivity() {
                 MyApplicationTheme(darkTheme = themeManager.isDarkMode) {
                     val navController = rememberNavController()
                     val tokenAuthManager = remember { TokenAuthManager() }
-
                     AppNavHost(
                         navController = navController,
                         tokenAuthManager = tokenAuthManager

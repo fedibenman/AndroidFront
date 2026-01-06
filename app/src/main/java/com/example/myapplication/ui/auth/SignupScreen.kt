@@ -1,7 +1,6 @@
 package com.example.myapplication.ui.auth
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.CircularProgressIndicator
@@ -19,9 +18,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.R
+import com.example.myapplication.storyCreator.ViewModel.AuthViewModel
 import com.example.myapplication.ui.theme.LocalThemeManager
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.example.myapplication.ui.theme.PressStart
+import com.example.myapplication.ui.theme.AnimatedThemeToggle
 
 @Composable
 fun SignupScreen(
@@ -58,6 +59,15 @@ fun SignupScreen(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.matchParentSize()
             )
+        }
+
+        // Theme toggle button at top right
+        Box(
+            modifier = Modifier
+                .padding(top = 50.dp, end = 20.dp)
+                .align(Alignment.TopEnd)
+        ) {
+            AnimatedThemeToggle()
         }
 
         Column(

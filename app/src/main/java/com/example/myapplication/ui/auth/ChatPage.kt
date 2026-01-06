@@ -1,66 +1,110 @@
 package com.example.myapplication.ui.auth
 
-import android.annotation.SuppressLint
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.util.Base64
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.runtime.*
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.rememberDrawerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.myapplication.DTOs.Profile
 import com.example.myapplication.R
 import com.example.myapplication.Repository.Conversation
+import com.example.myapplication.Repository.ImageData
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.example.myapplication.ui.theme.PressStart
 import com.example.myapplication.viewModel.AiConversationViewModel
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.rememberDrawerState
-import androidx.compose.runtime.rememberCoroutineScope
+import com.example.myapplication.ui.theme.LocalThemeManager
+import com.example.myapplication.ui.theme.AnimatedThemeToggle
 import kotlinx.coroutines.launch
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.TextFieldColors
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.unit.DpOffset
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.FileProvider
-import java.io.File
-import java.io.FileOutputStream
-import java.io.ByteArrayOutputStream
-import android.graphics.BitmapFactory
-import android.net.Uri
-import android.util.Base64
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
-import com.example.myapplication.Repository.ImageData
+
+
+@Composable
+fun StyledContainer(
+    modifier: Modifier = Modifier,
+    content: @Composable BoxScope.() -> Unit
+) {
+    Box(
+        modifier = modifier
+    ) {
+        // Shadow layer (offset to bottom-right for pixel art effect)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .offset(x = 4.dp, y = 4.dp)
+                .background(color = Color(0xFF4A4A4A))
+                .border(width = 2.dp, color = Color.Black)
+        )
+        
+        // Main container
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = Color.White)
+                .border(width = 2.dp, color = Color.Black)
+        ) {
+            content()
+        }
+    }
+}
 
 
 @Composable
@@ -147,18 +191,12 @@ fun ConversationItem(
     var isEditing by remember { mutableStateOf(false) }
     var editText by remember { mutableStateOf(conversation.title) }
 
-    Box(
+    StyledContainer(
         modifier = Modifier
             .fillMaxWidth()
             .height(70.dp)
             .padding(8.dp)
     ) {
-        // Background image
-        Image(
-            painter = painterResource(id = R.drawable.container),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize()
-        )
 
         if (isEditing) {
             // Edit mode - show TextField
@@ -301,25 +339,16 @@ fun ChatBubbleLeft(
                 }
             }
 
-            Box(
+            StyledContainer(
                 modifier = Modifier
                     .wrapContentWidth()
                     .wrapContentHeight()
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.container),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.matchParentSize()
-                )
-                
-
-                    Column(modifier = Modifier.padding(10.dp)) {
-                        Text(
-                            text,
-                            fontSize = 16.sp
-                        )
-
+                Column(modifier = Modifier.padding(10.dp)) {
+                    Text(
+                        text,
+                        fontSize = 16.sp
+                    )
                 }
             }
 
@@ -377,26 +406,17 @@ fun ChatBubbleRight(
                 }
             }
 
-            Box(
+            StyledContainer(
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
                     .wrapContentHeight()
             ) {
-
-                Image(
-                    painter = painterResource(id = R.drawable.container),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.matchParentSize()
-                )
-                    Column(modifier = Modifier.padding(10.dp)) {
-
-                        Text(
-                            text = text,
-                            fontSize = 16.sp
-                        )
-                    }
-
+                Column(modifier = Modifier.padding(10.dp)) {
+                    Text(
+                        text = text,
+                        fontSize = 16.sp
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -458,6 +478,9 @@ fun String.decodeToBitmap(): Bitmap {
 fun ChatPage(
     viewModel: AiConversationViewModel
 ) {
+    val themeManager = LocalThemeManager.current
+    val isDarkMode = themeManager.isDarkMode
+    
     val selectedConversation by viewModel.selectedConversation.collectAsState()
     val messages by viewModel.messages.collectAsState()
     val messageInput by viewModel.messageInput.collectAsState()
@@ -546,15 +569,25 @@ fun ChatPage(
             )
         }
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.background_general),
-            contentDescription = "Background",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Background based on theme
+            if (isDarkMode) {
+                Image(
+                    painter = painterResource(id = R.drawable.background_dark),
+                    contentDescription = "Dark Background",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                Image(
+                    painter = painterResource(id = R.drawable.background_general),
+                    contentDescription = "Background",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
 
-        )
-
-        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+            Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
             // Top Bar
             Row(
                 modifier = Modifier
@@ -670,21 +703,12 @@ fun ChatPage(
                 110.dp
             }
 
-            Box(
+            StyledContainer(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(inputBarHeight)
                     .padding(8.dp)
             ) {
-                // Background image (expanding container)
-                Image(
-                    painter = painterResource(id = R.drawable.container),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxSize(),           // ✔️ expands with parent
-                    contentScale = ContentScale.FillBounds
-                )
-
                 // Foreground content: image preview + input controls
                 Box(
                     modifier = Modifier
@@ -832,7 +856,16 @@ fun ChatPage(
                     }
                 }
             }
+            }
 
+            // Theme toggle button at top right - positioned last to be on top
+            Box(
+                modifier = Modifier
+                    .padding(top = 50.dp, end = 20.dp)
+                    .align(Alignment.TopEnd)
+            ) {
+                AnimatedThemeToggle()
+            }
         }
     }
 }
@@ -844,10 +877,9 @@ fun ChatPage(
 @Preview(showBackground = true)
 @Composable
 fun PreviewChatPageWithDrawer() {
-    val mockViewModel = AiConversationViewModel()
     MyApplicationTheme {
         ChatPage(
-            viewModel = mockViewModel
+            viewModel = remember { AiConversationViewModel() }
         )
     }
 }
