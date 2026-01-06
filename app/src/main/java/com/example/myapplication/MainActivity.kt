@@ -63,7 +63,6 @@ class MainActivity : ComponentActivity() {
                 MyApplicationTheme(darkTheme = themeManager.isDarkMode) {
                     val navController = rememberNavController()
                     val tokenAuthManager = remember { TokenAuthManager() }
-
                     AppNavHost(
                         navController = navController,
                         tokenAuthManager = tokenAuthManager
@@ -418,4 +417,10 @@ fun MainScreen(navController: NavHostController, content: @Composable () -> Unit
             content()
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewApp() {
+    MyApplicationTheme { Text("Preview") }
 }
