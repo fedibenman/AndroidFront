@@ -84,7 +84,7 @@ fun ImageAnalysisScreen(
     // ViewModel for handling image analysis
     val viewModel: ImageAnalysisViewModel = viewModel()
     val themeManager = LocalThemeManager.current
-    val isDarkMode = themeManager.isDarkMode
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
     
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var selectedImageBitmap by remember { mutableStateOf<Bitmap?>(null) }

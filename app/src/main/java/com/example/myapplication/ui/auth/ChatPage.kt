@@ -479,7 +479,7 @@ fun ChatPage(
     viewModel: AiConversationViewModel
 ) {
     val themeManager = LocalThemeManager.current
-    val isDarkMode = themeManager.isDarkMode
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
     
     val selectedConversation by viewModel.selectedConversation.collectAsState()
     val messages by viewModel.messages.collectAsState()

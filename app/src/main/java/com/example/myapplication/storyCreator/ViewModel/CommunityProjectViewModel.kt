@@ -26,9 +26,9 @@ class CommunityProjectViewModel(
     private val _currentUserId = MutableStateFlow<String?>(null)
     val currentUserId: StateFlow<String?> = _currentUserId.asStateFlow()
 
-    init {
-        loadCommunityProjects()
-    }
+    // init {
+    //    loadCommunityProjects()
+    // }
 
     fun setCurrentUserId(userId: String?) {
         _currentUserId.value = userId

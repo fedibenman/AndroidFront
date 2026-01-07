@@ -298,7 +298,7 @@ fun SketchPadDialog(
     onSketchSaved: (String) -> Unit
 ) {
     val themeManager = LocalThemeManager.current
-    val isDarkMode = themeManager.isDarkMode
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
     
     var pathsData by remember { mutableStateOf(listOf<DrawingPath>()) }
     var currentPoints by remember { mutableStateOf(listOf<Offset>()) }
@@ -466,7 +466,7 @@ fun EditNodeDialog(
     onSave: (String) -> Unit
 ) {
     val themeManager = LocalThemeManager.current
-    val isDarkMode = themeManager.isDarkMode
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
     
     var textValue by remember { mutableStateOf(node.text) }
     var showImageOptions by remember { mutableStateOf(false) }
@@ -697,7 +697,7 @@ fun FlowchartCanvas(
     onSaveGraph: (FlowchartState) -> Unit
 ) {
     val themeManager = LocalThemeManager.current
-    val isDarkMode = themeManager.isDarkMode
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
     val density = LocalDensity.current
     val nodeWidthPx = with(density) { NODE_WIDTH.dp.toPx() }
     val nodeHeightPx = with(density) { NODE_HEIGHT.dp.toPx() }
@@ -1375,7 +1375,7 @@ fun PixelButton(
     contentDescription: String
 ) {
     val themeManager = LocalThemeManager.current
-    val isDarkMode = themeManager.isDarkMode
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
     
     Box(
         modifier = modifier
@@ -1418,7 +1418,7 @@ fun PixelTextButton(
     enabled: Boolean = true
 ) {
     val themeManager = LocalThemeManager.current
-    val isDarkMode = themeManager.isDarkMode
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
     
     Box(
         modifier = modifier
@@ -1474,7 +1474,7 @@ fun BottomToolbar(
     onSave: () -> Unit
 ) {
     val themeManager = LocalThemeManager.current
-    val isDarkMode = themeManager.isDarkMode
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
     
     Row(
         Modifier
@@ -1824,7 +1824,7 @@ fun FlowBuilderScreen(
     onPersist: (FlowchartState) -> Unit = {}
 ) {
     val themeManager = LocalThemeManager.current
-    val isDarkMode = themeManager.isDarkMode
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
     
     val nodes = remember { mutableStateListOf<FlowNode>() }
     val state = remember { FlowchartState(nodes) }

@@ -15,8 +15,6 @@ foundation = "1.9.5"
 prebuiltCallAndroid = "3.9.10"
 retrofit = "3.0.0"
 socketIoClient = "2.1.2"
-playServicesTasks = "18.4.0"
-playServicesLocation = "21.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -40,8 +38,6 @@ androidx-compose-foundation = { group = "androidx.compose.foundation", name = "f
 prebuilt-call-android = { module = "com.github.ZEGOCLOUD:zego_uikit_prebuilt_call_android", version.ref = "prebuiltCallAndroid" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 socket-io-client = { module = "io.socket:socket.io-client", version.ref = "socketIoClient" }
-play-services-tasks = { group = "com.google.android.gms", name = "play-services-tasks", version.ref = "playServicesTasks" }
-play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

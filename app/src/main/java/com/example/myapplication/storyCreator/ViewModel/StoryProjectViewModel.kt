@@ -44,9 +44,9 @@ class StoryProjectViewModel(
     private val _referencesLoading = MutableStateFlow(false)
     val referencesLoading: StateFlow<Boolean> = _referencesLoading.asStateFlow()
 
-    init {
-        loadProjects()
-    }
+    // init {
+    //    loadProjects()
+    // }
 
     // ==================== PROJECT METHODS ====================
 

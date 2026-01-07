@@ -86,7 +86,7 @@ fun CommunityProjectsScreen(
     onForkSuccess: () -> Unit
 ) {
     val themeManager = LocalThemeManager.current
-    val isDarkMode = themeManager.isDarkMode
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
     
     val projects by viewModel.communityProjects.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()

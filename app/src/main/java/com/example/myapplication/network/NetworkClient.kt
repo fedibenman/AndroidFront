@@ -12,7 +12,7 @@ import kotlinx.serialization.json.Json
 object NetworkClient {
     // For Android Emulator: use 10.0.2.2
     // For real device: use your Mac's local IP
-    const val BASE_URL = "http://192.168.1.95:3001"
+    const val BASE_URL = "http://10.0.2.2:3001"
     
     val client = HttpClient(CIO) {
         install(ContentNegotiation) {

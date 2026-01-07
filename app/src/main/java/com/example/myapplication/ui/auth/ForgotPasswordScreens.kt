@@ -19,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -53,7 +54,7 @@ fun RequestResetCodeScreen(
     onCodeSent: () -> Unit
 ) {
     val themeManager = LocalThemeManager.current
-    val isDarkMode = themeManager.isDarkMode
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
     
     Box(
         modifier = Modifier.fillMaxSize()
@@ -267,7 +268,7 @@ fun CodeInputScreen(
     onBackToLogin: () -> Unit
 ) {
     val themeManager = LocalThemeManager.current
-    val isDarkMode = themeManager.isDarkMode
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
     
     val digits = remember { mutableStateListOf(*Array(codeLength) { "" }) }
 
@@ -460,7 +461,7 @@ fun NewPasswordScreen(
     onBackToLogin: () -> Unit
 ) {
     val themeManager = LocalThemeManager.current
-    val isDarkMode = themeManager.isDarkMode
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
     
     var confirmPassword by remember { mutableStateOf("") }
 

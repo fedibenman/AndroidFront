@@ -17,10 +17,13 @@ import androidx.compose.ui.unit.sp
 import com.example.myapplication.ui.theme.AnimatedThemeToggle
 import com.example.myapplication.ui.theme.LocalThemeManager
 
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+
 @Composable
 fun PopularFlows() {
     val themeManager = LocalThemeManager.current
-    val isDarkMode = themeManager.isDarkMode
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
 
     Box(
         modifier = Modifier

@@ -29,6 +29,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -64,7 +65,7 @@ fun ReferencesScreen(
     onDeleteReference: (String) -> Unit = {}
 ) {
     val themeManager = LocalThemeManager.current
-    val isDarkMode = themeManager.isDarkMode
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
     
     var showStyleSelector by remember { mutableStateOf(projectArtStyle == null) }
     var showAddReferenceDialog by remember { mutableStateOf(false) }
@@ -1248,7 +1249,7 @@ fun ReferenceCard(
     onEdit: () -> Unit
 ) {
     val themeManager = LocalThemeManager.current
-    val isDarkMode = themeManager.isDarkMode
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
     var expanded by remember { mutableStateOf(false) }
     val is3D = projectArtStyle?.dimension == ArtDimension.THREE_D
 

@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.myapplication.storyCreator.repository.KtorAuthRepository
 import com.example.myapplication.ui.theme.PressStart
 import kotlinx.coroutines.flow.first
 

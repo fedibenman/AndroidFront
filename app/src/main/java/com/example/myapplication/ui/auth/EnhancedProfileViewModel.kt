@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.myapplication.DTOs.Profile
 import com.example.myapplication.Repository.ProfileRepository
 import com.example.myapplication.Repository.ProfileUpdateRequest
+import com.example.myapplication.storyCreator.repository.AuthRepository
+import com.example.myapplication.storyCreator.repository.KtorAuthRepository
 import com.example.myapplication.model.*
 import com.example.myapplication.ui.auth.TokenDataStoreManager
 import com.example.myapplication.AppContextHolder
@@ -142,7 +144,7 @@ class EnhancedProfileViewModel(
                 val result = authRepository.getProfile(accessToken)
 
                 result.fold(
-                    onSuccess = { profileData ->
+                    onSuccess = { profileData: Profile ->
                         profile = profileData
                         Log.d("ProfileViewModel", "Profile loaded: id=${profileData.id}, name=${profileData.name}")
                         Log.d("ProfileViewModel", "Bio: ${profileData.bio}")
@@ -286,7 +288,7 @@ class EnhancedProfileViewModel(
             // Reload full profile from server to get all fields including name
             val result = authRepository.getProfile(accessToken)
             result.fold(
-                onSuccess = { profileData ->
+                onSuccess = { profileData: Profile ->
                     profile = profileData
                     initializeEditFields(profileData)
                     Log.d("ProfileViewModel", "Profile reloaded after save: ${profileData.name}")

@@ -85,4 +85,5 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.socket.io.client)
     implementation(libs.prebuilt.call.android)
+    implementation(libs.play.services.location)
 }

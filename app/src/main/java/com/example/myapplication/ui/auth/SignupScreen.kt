@@ -32,6 +32,8 @@ fun SignupScreen(
 ) {
     // Use ViewModel properties directly
     var confirmPassword by remember { mutableStateOf("") }
+    val themeManager = LocalThemeManager.current
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
 
     Box(
         modifier = Modifier.fillMaxSize()

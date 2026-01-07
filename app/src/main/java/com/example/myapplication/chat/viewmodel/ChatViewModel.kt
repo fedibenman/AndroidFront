@@ -56,7 +56,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                             Log.d("ChatViewModel", "Profile loaded: ${profile.name}, ID: ${profile.id}")
                             _currentUserId.value = profile.id
                             // Use email as fallback if name is null or empty
-                            _currentUserName.value = profile.name?.ifEmpty { profile.email } ?: profile.email
+                            _currentUserName.value = profile.name?.ifEmpty { profile.email } ?: profile.email ?: "Unknown"
                         } else {
                             Log.e("ChatViewModel", "Failed to load profile: ${result.exceptionOrNull()}")
                         }
@@ -89,10 +89,12 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     fun sendMessage(content: String) {
         val room = _currentRoom.value ?: return
         val userId = _currentUserId.value
+        // Ensure userId is not null
         if (userId.isNullOrBlank()) {
             Log.e("ChatViewModel", "Cannot send message: userId is null or blank")
             return
         }
+        val safeUserId = userId!!
         val userName = _currentUserName.value
         
         val replyTo = _replyingToMessage.value?.let {
@@ -103,7 +105,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             )
         }
 
-        repository.sendMessage(userId, userName, content, room._id, replyTo = replyTo)
+        repository.sendMessage(safeUserId, userName, content, room._id, replyTo = replyTo)
         repository.sendStopTyping(room._id)
         _replyingToMessage.value = null
     }
