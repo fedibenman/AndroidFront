@@ -22,6 +22,7 @@ class AuthViewModel(
     var email by mutableStateOf("")
     var password by mutableStateOf("")
     var name by mutableStateOf("")
+    var confirmPassword by mutableStateOf("")
 
     // Forgot password state
     var resetEmail by mutableStateOf("")
@@ -72,26 +73,35 @@ class AuthViewModel(
         isLoading = true
         viewModelScope.launch {
             val result = repository.login(email.trim(), password)
-            isLoading = false
-            result.fold(
-                onSuccess = { loginResponse ->
-                    // Always save the access token
-                    tokenManager.saveAccessTokenOnly(loginResponse.token.accessToken)
-                    
-                    // Only save refresh token if "remember me" is checked
-                    if (rememberMeParam) {
-                        // Update the stored token to include the refresh token
-                        tokenManager.saveTokens(loginResponse.token.accessToken, loginResponse.token.refreshToken)
-                    }
-                    
-                    success = true
-                    onComplete(true)
-                },
-                onFailure = {
-                    generalError = it.message ?: "Login failed"
-                    onComplete(false)
+            
+            if (result.isSuccess) {
+                val loginResponse = result.getOrThrow()
+                // Always save the access token
+                tokenManager.saveAccessTokenOnly(loginResponse.token.accessToken)
+                
+                // Only save refresh token if "remember me" is checked
+                if (rememberMeParam) {
+                    // Update the stored token to include the refresh token
+                    tokenManager.saveTokens(loginResponse.token.accessToken, loginResponse.token.refreshToken)
                 }
-            )
+                
+                // Fetch profile to get userId and save it
+                // We can call this directly as we are in the coroutine scope
+                val profileResult = repository.getProfile(loginResponse.token.accessToken)
+                profileResult.onSuccess { profile ->
+                    profile.id?.let { userId ->
+                        tokenManager.saveUserId(userId)
+                    }
+                }
+                
+                isLoading = false
+                success = true
+                onComplete(true)
+            } else {
+                isLoading = false
+                generalError = result.exceptionOrNull()?.message ?: "Login failed"
+                onComplete(false)
+            }
         }
     }
 
@@ -104,6 +114,7 @@ class AuthViewModel(
         if (email.isBlank()) { emailError = "Email cannot be empty"; onComplete(false); return }
         if (!email.contains("@")) { emailError = "Invalid email format"; onComplete(false); return }
         if (password.isBlank()) { passwordError = "Password cannot be empty"; onComplete(false); return }
+        if (password != confirmPassword) { passwordError = "Passwords do not match"; onComplete(false); return }
 
         isLoading = true
         viewModelScope.launch {

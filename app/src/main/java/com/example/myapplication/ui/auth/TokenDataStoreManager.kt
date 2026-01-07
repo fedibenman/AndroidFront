@@ -13,12 +13,13 @@ import androidx.room.RoomDatabase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-// Single-row entity holding both tokens
+// Single-row entity holding tokens and userId
 @Entity(tableName = "auth_tokens")
 data class AuthTokenEntity(
     @PrimaryKey val id: Int = 0,
     val accessToken: String?,
-    val refreshToken: String?
+    val refreshToken: String?,
+    val userId: String? = null
 )
 
 // DAO for reading/writing the single token row
@@ -39,7 +40,7 @@ interface AuthTokenDao {
 }
 
 // Room database definition
-@Database(entities = [AuthTokenEntity::class], version = 1, exportSchema = false)
+@Database(entities = [AuthTokenEntity::class], version = 2, exportSchema = false)
 abstract class AuthTokenDatabase : RoomDatabase() {
     abstract fun authTokenDao(): AuthTokenDao
 
@@ -71,13 +72,33 @@ class TokenDataStoreManager(context: Context) {
 
     val refreshTokenFlow: Flow<String?> =
         dao.observeTokens().map { it?.refreshToken }
+        
+    val userIdFlow: Flow<String?> =
+        dao.observeTokens().map { it?.userId }
 
-    suspend fun saveTokens(accessToken: String, refreshToken: String) {
-        dao.upsert(AuthTokenEntity(accessToken = accessToken, refreshToken = refreshToken))
+    suspend fun saveTokens(accessToken: String, refreshToken: String, userId: String? = null) {
+        // Preserve existing userId if not provided
+        val existing = dao.getTokens()
+        val finalUserId = userId ?: existing?.userId
+        dao.upsert(AuthTokenEntity(accessToken = accessToken, refreshToken = refreshToken, userId = finalUserId))
     }
 
     suspend fun saveAccessTokenOnly(accessToken: String) {
-        dao.upsert(AuthTokenEntity(accessToken = accessToken, refreshToken = null))
+        val existing = dao.getTokens()
+        dao.upsert(AuthTokenEntity(accessToken = accessToken, refreshToken = existing?.refreshToken, userId = existing?.userId))
+    }
+    
+    suspend fun saveUserId(userId: String) {
+        val existing = dao.getTokens()
+        dao.upsert(AuthTokenEntity(
+            accessToken = existing?.accessToken,
+            refreshToken = existing?.refreshToken,
+            userId = userId
+        ))
+    }
+    
+    suspend fun getUserId(): String? {
+        return dao.getTokens()?.userId
     }
 
     suspend fun clearTokens() {

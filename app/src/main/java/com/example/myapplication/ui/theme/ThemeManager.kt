@@ -12,6 +12,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.core.content.edit
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * ThemeManager handles dark/light theme switching and persistence
@@ -35,24 +38,28 @@ class ThemeManager(private val context: Context) {
     
     private val sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
     
-    private val _isDarkMode: MutableState<Boolean> = mutableStateOf(
+    private val _isDarkModeFlow = MutableStateFlow(
         sharedPreferences.getBoolean(KEY_IS_DARK_MODE, false)
     )
     
-    val isDarkMode: Boolean
-        get() = _isDarkMode.value
+    // StateFlow for collecting in Composables
+    val isDarkMode: StateFlow<Boolean> = _isDarkModeFlow.asStateFlow()
+    
+    // Direct value access
+    val isDarkModeValue: Boolean
+        get() = _isDarkModeFlow.value
     
     fun toggleTheme() {
-        val newValue = !isDarkMode
-        _isDarkMode.value = newValue
+        val newValue = !_isDarkModeFlow.value
+        _isDarkModeFlow.value = newValue
         sharedPreferences.edit {
             putBoolean(KEY_IS_DARK_MODE, newValue)
         }
     }
     
     fun setDarkMode(darkMode: Boolean) {
-        if (_isDarkMode.value != darkMode) {
-            _isDarkMode.value = darkMode
+        if (_isDarkModeFlow.value != darkMode) {
+            _isDarkModeFlow.value = darkMode
             sharedPreferences.edit {
                 putBoolean(KEY_IS_DARK_MODE, darkMode)
             }

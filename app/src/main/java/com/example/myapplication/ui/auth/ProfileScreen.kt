@@ -170,7 +170,7 @@ fun ProfileHeader(
                 Spacer(modifier = Modifier.height(4.dp))
                 
                 Text(
-                    text = profile.email,
+                    text = profile.email ?: "",
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onBackground,
                     maxLines = 1

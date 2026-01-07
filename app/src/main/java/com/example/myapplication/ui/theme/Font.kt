@@ -7,5 +7,6 @@ import com.example.myapplication.R
 
 val PressStart = FontFamily(
     Font(R.raw.press_start, FontWeight.Normal),
-
 )
+
+val PixelatedFont = PressStart
